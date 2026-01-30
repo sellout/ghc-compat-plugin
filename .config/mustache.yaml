@@ -1,0 +1,10 @@
+{
+  "project":
+    {
+      "description": "Controls various GHC options and extensions to make compilation across multiple versions easier, and to alert you to incompatibilities.",
+      "name": "ghc-compat-plugin",
+      "repo": "sellout/ghc-compat-plugin",
+      "summary": "Eases support for multiple GHC versions",
+    },
+  "type": { "name": "haskell" },
+}
