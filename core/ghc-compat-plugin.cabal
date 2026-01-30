@@ -233,6 +233,8 @@ library
   if impl(ghc >= 7.10.1)
     other-modules:
       GhcCompat.Supported
+      GhcCompat.Supported.GhcRelease
+      GhcCompat.Supported.Opts
   else
     other-modules:
       GhcCompat.Unsupported

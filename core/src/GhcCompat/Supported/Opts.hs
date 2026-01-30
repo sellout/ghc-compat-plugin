@@ -1,0 +1,94 @@
+{-# LANGUAGE Safe #-}
+
+-- | The implementation of the plugin, but this module is only loaded on
+--   GHC 7.10+.
+module GhcCompat.Supported.Opts
+  ( Opts,
+    ReportLevel (Error, Warn),
+    minVersion,
+    parse,
+    reportIncompatibleExtensions,
+  )
+where
+
+import "base" Control.Applicative (pure)
+import "base" Control.Category ((.))
+import "base" Data.Bifunctor (second)
+import "base" Data.Either (Either (Left))
+import "base" Data.Eq (Eq, (==))
+import "base" Data.Foldable (foldrM)
+import "base" Data.Function (flip, ($))
+import "base" Data.Functor (fmap, (<$>))
+import "base" Data.List (break, drop, lookup)
+import "base" Data.List.NonEmpty (last, nonEmpty)
+import "base" Data.Maybe (Maybe (Nothing), maybe)
+import "base" Data.Ord (Ord)
+import "base" Data.Semigroup ((<>))
+import "base" Data.String (String)
+import "base" Data.Tuple (curry, fst, uncurry)
+import "base" Data.Version (Version, parseVersion)
+import "base" Text.ParserCombinators.ReadP (readP_to_S)
+import "base" Text.Read (Read)
+import "base" Text.Show (Show)
+
+-- | This mirrors the levels provided by GHC’s warning flags. Correspondingly,
+--   we use the lowercase forms for the plugin opts instead of the capitalized
+--   ones.
+data ReportLevel = Warn | Error
+  deriving (Eq, Ord, Read, Show)
+
+defaultOpts :: Version -> Opts
+defaultOpts minVersion =
+  Opts {minVersion, reportIncompatibleExtensions = pure Warn}
+
+readVersion :: String -> Maybe Version
+readVersion = fmap (fst . last) . nonEmpty . readP_to_S parseVersion
+
+-- | Options support by the plugin. These can be specified with the
+--   [@-fplugin-opt@](https://downloads.haskell.org/ghc/latest/docs/users_guide/extending_ghc.html#ghc-flag-fplugin-opt-module-args)
+--   GHC option.
+--
+-- >>> defaultOpts <$> readVersion "7.10.1"
+-- Just (Opts {minVersion = Version {versionBranch = [7,10,1], versionTags = []}, reportIncompatibleExtensions = Just Warn})
+data Opts = Opts
+  { -- | Period-separated natural numbers (e.g., “7.10.1”).
+    minVersion :: Version,
+    -- | This can be “no”, “warn” (the default), or “error”.
+    reportIncompatibleExtensions :: Maybe ReportLevel
+  }
+  deriving (Eq, Ord, Read, Show)
+
+parseOpt :: Opts -> String -> String -> Either String Opts
+parseOpt opts =
+  curry $ \case
+    ("minVersion", _) -> pure opts
+    ("reportIncompatibleExtensions", level) ->
+      (\v -> opts {reportIncompatibleExtensions = v}) <$> case level of
+        "no" -> pure Nothing
+        "warn" -> pure $ pure Warn
+        "error" -> pure $ pure Error
+        _ ->
+          Left $
+            "Unknown reporting level ‘"
+              <> level
+              <> "’ (options are ‘no’, ‘warn’, and ‘error’)."
+    (k, v) ->
+      Left $
+        "Received unknown plugin-opt ‘" <> k <> "’ with value ‘" <> v <> "’."
+
+parse :: [String] -> Either String Opts
+parse optStrs =
+  let kv = second (drop 1) . break (== '=') <$> optStrs
+   in maybe
+        (Left "Missing required ‘minVersion’ plugin-opt.")
+        ( \versionStr ->
+            maybe
+              ( Left $
+                  "Couldn’t parse ‘minVersion’ value ‘" <> versionStr <> "’."
+              )
+              ( \version ->
+                  foldrM (flip $ uncurry . parseOpt) (defaultOpts version) kv
+              )
+              $ readVersion versionStr
+        )
+        $ lookup "minVersion" kv
