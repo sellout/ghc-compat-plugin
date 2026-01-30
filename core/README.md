@@ -43,6 +43,14 @@ Note that in the last line, you must provide the oldest GHC version[^2] you supp
 
 [^2]: It’s recommend that you specify the full GHC version you use. You can specify fewer (or more), but if you specify `8.8` and a feature is documented as added in `8.8.1`, it won’t warn about not using that feature.
 
+You can also add
+
+```cabal
+    -fplugin-opt GhcCompat:reportIncompatibleExtensions=error
+```
+
+(where `error` can also be `warn` (the default) or `no`) in order to control how the plugin informs you of enabled extensions that aren’t compatible with all of your supported GHC versions.
+
 __NB__: This plugin is intended to compile with any GHC you happen to have around[^3], but it currently won’t _do_ anything before GHC 7.10.1.
 
 [^3]: What good would a compatibility plugin be if it wasn’t extremely compatible?
