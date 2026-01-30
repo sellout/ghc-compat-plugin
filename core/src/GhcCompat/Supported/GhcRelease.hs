@@ -1,5 +1,10 @@
+-- GHC 6.8.1
 {-# LANGUAGE CPP #-}
+-- GHC 7.2.1
 {-# LANGUAGE Trustworthy #-}
+-- GHC 6.10
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -fplugin-opt NoRecursion:ignore-decls:ghc_9_14_1 #-}
 
 -- | The implementation of the plugin, but this module is only loaded on
 --   GHC 7.10+.
@@ -21,6 +26,10 @@ import qualified "ghc" GHC.Plugins as Plugins
 #else
 import qualified "ghc" GhcPlugins as Plugins
 #endif
+
+-- Redundant brackets are due to CPP conditionalization, and removing them would
+-- only make the conditionalization worse.
+{-# HLINT ignore "Redundant bracket" #-}
 
 data GhcRelease = GhcRelease
   { version :: Version,

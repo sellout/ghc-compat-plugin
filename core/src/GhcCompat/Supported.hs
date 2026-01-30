@@ -1,5 +1,9 @@
+-- GHC 6.8.1
 {-# LANGUAGE CPP #-}
+-- GHC 7.2.1
 {-# LANGUAGE Trustworthy #-}
+-- GHC 6.10
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 -- | The implementation of the plugin, but this module is only loaded on
 --   GHC 7.10+.
@@ -26,6 +30,7 @@ import safe "base" Data.Monoid (mconcat)
 import safe "base" Data.Ord ((<))
 import safe "base" Data.Semigroup (sconcat, (<>))
 import safe "base" Data.String (String)
+import safe "base" Data.Traversable (traverse)
 import safe "base" Data.Tuple (uncurry)
 import safe "base" Data.Version (Version, showVersion)
 import safe "base" System.Exit (die)
@@ -54,6 +59,14 @@ import "ghc" GhcPlugins
 import qualified "ghc" GhcPlugins as Plugins
 #endif
 
+-- When the function returns @f ()@, don’t throw away the unit. We want to know
+-- if we change a return type and actually have a value to deal with (and it
+-- just offends my linear type sensibilities).
+--
+-- FIXME: I tried to do this in my hlint config, but it didn’t silence the
+-- warning for some reason, so figure out how to do it in the right place.
+{-# HLINT ignore "Use traverse_" #-}
+
 plugin :: Plugin
 plugin =
   defaultPlugin
@@ -70,11 +83,9 @@ dflagsPlugin optStrs dflags = do
   opts <-
     either (die . (errorPrelude optStrs "error" <>)) pure $ Opts.parse optStrs
   let minVer = Opts.minVersion opts
-  maybe
-    (pure ())
+  traverse
     ( \level ->
-        maybe
-          (pure ())
+        traverse
           ( ( case level of
                 Opts.Warn -> putStr . (errorPrelude optStrs "warning" <>)
                 Opts.Error -> die . (errorPrelude optStrs "error" <>)

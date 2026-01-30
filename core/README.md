@@ -51,7 +51,7 @@ You can also add
 
 (where `error` can also be `warn` (the default) or `no`) in order to control how the plugin informs you of enabled extensions that aren’t compatible with all of your supported GHC versions.
 
-__NB__: This plugin is intended to compile with any GHC you happen to have around[^3], but it currently won’t _do_ anything before GHC 7.10.1.
+**NB**: This plugin is intended to compile with any GHC you happen to have around[^3], but it currently won’t _do_ anything before GHC 7.10.1.
 
 [^3]: What good would a compatibility plugin be if it wasn’t extremely compatible?
 
