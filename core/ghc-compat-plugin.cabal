@@ -93,58 +93,8 @@ flag verify-no-recursion
   -- Because disabling this flag won’t help the solver.
   manual: True
 
--- This mimics the GHC2024 extension
--- (https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/control.html?highlight=doandifthenelse#extension-GHC2024),
--- but supporting compilers back to GHC 7.10. If the oldest supported compiler
--- is GHC 9.10, then this stanza can be removed and `import: GHC2024` can be
--- replaced by `default-language: GHC2024`. If the oldest supported compiler is
--- GHC 9.2, then this can be simplified by setting `default-language: GHC2021`
--- and only including the extensions added by GHC2024.
-common GHC2024
-  default-language: Haskell2010
-  default-extensions:
-    BangPatterns
-    BinaryLiterals
-    ConstraintKinds
-    DataKinds
-    DeriveDataTypeable
-    DeriveGeneric
-    -- DeriveLift -- uncomment if the oldest supported version is GHC 8.10.1+
-    DeriveTraversable
-    -- DerivingStrategies -- uncomment if the oldest supported version is GHC 8.2.1+
-    DisambiguateRecordFields
-    DoAndIfThenElse
-    EmptyCase
-    ExistentialQuantification
-    FlexibleContexts
-    FlexibleInstances
-    GADTs
-    GeneralizedNewtypeDeriving
-    -- HexFloatLiterals -- uncomment if the oldest supported version is GHC 8.4.1+
-    -- ImportQualifiedPost -- uncomment if the oldest supported version is GHC 8.10.1+
-    InstanceSigs
-    LambdaCase
-    MagicHash
-    MonadComprehensions
-    MonomorphismRestriction
-    MultiParamTypeClasses
-    NamedFieldPuns
-    NamedWildCards
-    -- NumericUnderscores -- uncomment if the oldest supported version is GHC 8.6.1+
-    PolyKinds
-    PostfixOperators
-    RankNTypes
-    RoleAnnotations
-    ScopedTypeVariables
-    StandaloneDeriving
-    -- StandaloneKindSignatures -- uncomment if the oldest supported version is GHC 8.10.1+
-    TupleSections
-    -- TypeApplications -- uncomment if the oldest supported version is GHC 8.0.1+
-    TypeOperators
-    UnicodeSyntax
-
 common defaults
-  import: GHC2024
+  default-language: Haskell98
   build-depends:
     base ^>= {4.8.2, 4.9.0, 4.10.0, 4.11.0, 4.12.0, 4.13.0, 4.14.0, 4.15.0, 4.16.0, 4.17.0, 4.18.0, 4.19.0, 4.20.0, 4.21.0},
   ghc-options:
@@ -188,30 +138,6 @@ common defaults
     ghc-options:
       -- See
       -- https://github.com/ghc-proposals/ghc-proposals/blob/master/proposals/0581-namespace-specified-imports.rst#deprecate-use-of-pattern-in-import-export-lists
-  default-extensions:
-    -- BlockArguments - uncomment if the oldest supported version is GHC 8.6.1+
-    DefaultSignatures
-    ExplicitNamespaces
-    FunctionalDependencies
-    LiberalTypeSynonyms
-    -- replace with `LexicalNegation` if the oldest supported version is GHC 9.0.1+
-    NegativeLiterals
-    PackageImports
-    ParallelListComp
-    -- QualifiedDo - uncomment if the oldest supported version is GHC 9.0.1+
-    RecursiveDo
-    -- RequiredTypeArguments - uncomment if the oldest supported version is GHC 9.10.1+
-    -- TemplateHaskellQuotes - uncomment if the oldest supported version is GHC 8.0.1+
-    TransformListComp
-    NoGeneralizedNewtypeDeriving
-    NoImplicitPrelude
-    NoMonomorphismRestriction
-    NoPatternGuards
-    -- NoStarIsType - uncomment if the oldest supported version is GHC 8.6.1+
-    -- NoTypeApplications - uncomment if the oldest supported version is GHC 8.0.1+
-  if impl(ghc >= 8.0.1)
-    default-extensions:
-      StrictData
   if flag(noisy-deprecations)
     cpp-options:
       -DSELLOUT_NOISY_DEPRECATIONS
@@ -231,6 +157,14 @@ library
   exposed-modules:
     GhcCompat
   if impl(ghc >= 7.10.1)
+    default-extensions:
+      -- 6.8.1
+      NoImplicitPrelude
+      -- 6.10.1
+      NamedFieldPuns
+      PackageImports
+      -- 7.6.1
+      LambdaCase
     other-modules:
       GhcCompat.Supported
       GhcCompat.Supported.GhcRelease
@@ -271,6 +205,10 @@ test-suite doctests
     ghc-options:
       -Wno-missing-deriving-strategies
   default-extensions:
+    -- 6.8.1
+    NoImplicitPrelude
+    -- 6.10.1
+    PackageImports
     -- Since we can’t add `{-# LANGUAGE Safe -#}` to the generated
     -- “Build_doctests.hs”, we set it here, and that means it has to match
     -- doctests.hs, which is `Unsafe`.
