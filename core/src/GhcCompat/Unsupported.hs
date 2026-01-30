@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-safe #-}
-
 -- |
 --
 --  __NB__: This module is designed to work as backward-compatibly as possible,

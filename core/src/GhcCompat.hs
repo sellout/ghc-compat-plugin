@@ -37,7 +37,12 @@ module GhcCompat
   )
 where
 
-#if defined (MIN_VERSION_GLASGOW_HASKELL)
+-- This macro was added in GHC 7.10.1, so that’s currently our level of support
+-- (also, currently the oldest major version of GHC that GHCup offers).
+--
+-- TODO: Don’t rely on MIN_VERSION_GLASGOW_HASKELL for conditionalization, so we
+--       can support back to GHC 6.8.1 (when CPP support was added).
+#if defined(MIN_VERSION_GLASGOW_HASKELL)
 import "this" GhcCompat.Supported as Implementation (plugin, Opts)
 #else
 import "this" GhcCompat.Unsupported as Implementation (plugin)
