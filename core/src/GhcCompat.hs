@@ -38,7 +38,7 @@ module GhcCompat
 where
 
 #if defined (MIN_VERSION_GLASGOW_HASKELL)
-import "this" GhcCompat.Supported as Implementation (plugin, Opts, defaultOpts)
+import "this" GhcCompat.Supported as Implementation (plugin, Opts)
 #else
 import "this" GhcCompat.Unsupported as Implementation (plugin)
 #endif

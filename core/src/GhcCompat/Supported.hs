@@ -38,7 +38,6 @@ module GhcCompat.Supported
 
     -- * exported purely for documentation
     Opts,
-    defaultOpts,
 
     -- * exported to avoid extra CPP
     ghc_6_8_1,
@@ -83,13 +82,15 @@ import "ghc" GhcPlugins
 import qualified "ghc" GhcPlugins as Plugins
 #endif
 
--- |
---
--- >>> defaultOpts $ makeVersion [7, 10, 1]
--- Opts {minVersion = Version {versionBranch = [7,10,1], versionTags = []}}
 defaultOpts :: Version -> Opts
 defaultOpts minVersion = Opts {minVersion}
 
+-- | Options support by the plugin. These can be specified with the
+--   [@-fplugin-opt@](https://downloads.haskell.org/ghc/latest/docs/users_guide/extending_ghc.html#ghc-flag-fplugin-opt-module-args)
+--   GHC option.
+--
+-- >>> defaultOpts $ makeVersion [7, 10, 1]
+-- Opts {minVersion = Version {versionBranch = [7,10,1], versionTags = []}}
 newtype Opts = Opts {minVersion :: Version}
   deriving (Eq, Ord, Read, Show)
 
