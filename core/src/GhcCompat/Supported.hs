@@ -86,11 +86,11 @@ import qualified "ghc" GhcPlugins as Plugins
 -- |
 --
 -- >>> defaultOpts $ makeVersion [7, 10, 1]
--- Opts {minSupportedVersion = Version {versionBranch = [7,10,1], versionTags = []}}
+-- Opts {minVersion = Version {versionBranch = [7,10,1], versionTags = []}}
 defaultOpts :: Version -> Opts
-defaultOpts minSupportedVersion = Opts {minSupportedVersion}
+defaultOpts minVersion = Opts {minVersion}
 
-newtype Opts = Opts {minSupportedVersion :: Version}
+newtype Opts = Opts {minVersion :: Version}
   deriving (Eq, Ord, Read, Show)
 
 plugin :: Plugin
@@ -109,11 +109,11 @@ parseOpts =
     . (drop 1 . dropWhile (/= '=') <=< take 1)
 
 updateFlags :: Opts -> Plugins.HscEnv -> Plugins.HscEnv
-updateFlags Opts {minSupportedVersion} env =
+updateFlags Opts {minVersion} env =
   env
     { Plugins.hsc_dflags =
         foldl' Plugins.wopt_unset (Plugins.extractDynFlags env) $
-          warningFlags minSupportedVersion
+          warningFlags minVersion
     }
 
 warningFlags :: Version -> [Plugins.WarningFlag]
@@ -130,8 +130,8 @@ warningFlags =
     ]
 
 whenOlder :: Version -> Version -> [Plugins.WarningFlag] -> [Plugins.WarningFlag]
-whenOlder minSupportedVersion flagAddedVersion flags =
-  if minSupportedVersion < flagAddedVersion then flags else []
+whenOlder minVersion flagAddedVersion flags =
+  if minVersion < flagAddedVersion then flags else []
 
 ghc_6_8_1 :: Version
 ghc_6_8_1 = makeVersion [6, 8, 1]
