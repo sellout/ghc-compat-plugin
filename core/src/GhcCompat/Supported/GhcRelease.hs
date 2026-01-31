@@ -4,7 +4,7 @@
 {-# LANGUAGE Trustworthy #-}
 -- GHC 6.10
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# OPTIONS_GHC -fplugin-opt NoRecursion:ignore-decls:ghc_9_14_1 #-}
+{-# OPTIONS_GHC -fplugin-opt NoRecursion:ignore-decls:ghc_8_6_1,ghc_8_10_1,ghc_9_14_1 #-}
 
 -- | The implementation of the plugin, but this module is only loaded on
 --   GHC 7.10+.
@@ -14,6 +14,32 @@ module GhcCompat.Supported.GhcRelease
     newExtensions,
     newWarnings,
     version,
+
+    -- * individual releases
+    ghc_6_0_1,
+    ghc_6_8_1,
+    ghc_6_10_1,
+    ghc_6_12_1,
+    ghc_7_0_1,
+    ghc_7_2_1,
+    ghc_7_4_1,
+    ghc_7_6_1,
+    ghc_7_8_1,
+    ghc_7_10_1,
+    ghc_8_0_1,
+    ghc_8_2_1,
+    ghc_8_4_1,
+    ghc_8_6_1,
+    ghc_8_8_1,
+    ghc_8_10_1,
+    ghc_9_0_1,
+    ghc_9_2_1,
+    ghc_9_2_4,
+    ghc_9_6_1,
+    ghc_9_8_1,
+    ghc_9_10_1,
+    ghc_9_12_1,
+    ghc_9_14_1,
   )
 where
 
@@ -45,9 +71,9 @@ ghcRelease versionComponents =
       newWarnings = []
     }
 
-ghc_6_0 :: GhcRelease
-ghc_6_0 =
-  (ghcRelease [6, 0])
+ghc_6_0_1 :: GhcRelease
+ghc_6_0_1 =
+  (ghcRelease [6, 0, 1])
     { newExtensions = [Extension.TemplateHaskell],
       newWarnings = []
     }
@@ -114,13 +140,6 @@ ghc_6_10_1 =
       newWarnings = []
     }
 
-ghc_6_12 :: GhcRelease
-ghc_6_12 =
-  (ghcRelease [6, 12])
-    { newExtensions = [Extension.TupleSections],
-      newWarnings = []
-    }
-
 ghc_6_12_1 :: GhcRelease
 ghc_6_12_1 =
   (ghcRelease [6, 12, 1])
@@ -128,7 +147,8 @@ ghc_6_12_1 =
         [ Extension.ExplicitForAll,
           Extension.GHCForeignImportPrim,
           Extension.MonoLocalBinds,
-          Extension.NPlusKPatterns
+          Extension.NPlusKPatterns,
+          Extension.TupleSections
         ],
       newWarnings = []
     }
@@ -200,17 +220,6 @@ ghc_7_8_1 =
       newWarnings = []
     }
 
-ghc_7_10 :: GhcRelease
-ghc_7_10 =
-  (ghcRelease [7, 10])
-    { newExtensions = [],
-      -- TODO: In GHC 7.8, @AutoDeriveTypeable@ can be used, but maybe need an
-      --       option to decide whether that’s good enough. Especially because
-      --       @AutoDeriveTypeable@ is removed in newer GHC versions (so it
-      --       would need CPP conditionalization).
-      newWarnings = [(ghc_7_8_1, [Plugins.Opt_WarnDerivingTypeable])]
-    }
-
 ghc_7_10_1 :: GhcRelease
 ghc_7_10_1 =
   (ghcRelease [7, 10, 1])
@@ -225,7 +234,11 @@ ghc_7_10_1 =
           Extension.PostfixOperators,
           Extension.StaticPointers
         ],
-      newWarnings = []
+      -- TODO: In GHC 7.8, @AutoDeriveTypeable@ can be used, but maybe need an
+      --       option to decide whether that’s good enough. Especially because
+      --       @AutoDeriveTypeable@ is removed in newer GHC versions (so it
+      --       would need CPP conditionalization).
+      newWarnings = [(ghc_7_8_1, [Plugins.Opt_WarnDerivingTypeable])]
     }
 
 ghc_8_0_1 :: GhcRelease
@@ -274,15 +287,6 @@ ghc_8_4_1 =
     }
 #endif
 
-ghc_8_6 :: GhcRelease
-ghc_8_6 =
-  (ghcRelease [8, 6])
-#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 0, 0)
-    { newExtensions = [],
-      newWarnings = [(ghc_8_6_1, [Plugins.Opt_WarnStarIsType])]
-    }
-#endif
-
 ghc_8_6_1 :: GhcRelease
 ghc_8_6_1 =
   (ghcRelease [8, 6, 1])
@@ -294,7 +298,7 @@ ghc_8_6_1 =
           Extension.QuantifiedConstraints,
           Extension.StarIsType
         ],
-      newWarnings = []
+      newWarnings = [(ghc_8_6_1, [Plugins.Opt_WarnStarIsType])]
     }
 #endif
 
@@ -304,15 +308,6 @@ ghc_8_8_1 =
 #if MIN_VERSION_GLASGOW_HASKELL(8, 8, 1, 0)
     { newExtensions = [],
       newWarnings = [(ghc_8_2_1, [Plugins.Opt_WarnMissingDerivingStrategies])]
-    }
-#endif
-
-ghc_8_10 :: GhcRelease
-ghc_8_10 =
-  (ghcRelease [8, 10])
-#if MIN_VERSION_GLASGOW_HASKELL(8, 10, 0, 0)
-    { newExtensions = [],
-      newWarnings = [(ghc_8_10_1, [Plugins.Opt_WarnPrepositiveQualifiedModule])]
     }
 #endif
 
@@ -326,7 +321,7 @@ ghc_8_10_1 =
           Extension.StandaloneKindSignatures,
           Extension.UnliftedNewtypes
         ],
-      newWarnings = []
+      newWarnings = [(ghc_8_10_1, [Plugins.Opt_WarnPrepositiveQualifiedModule])]
     }
 #endif
 
@@ -343,18 +338,6 @@ ghc_9_0_1 =
     }
 #endif
 
-ghc_9_2 :: GhcRelease
-ghc_9_2 =
-  (ghcRelease [9, 2])
-#if MIN_VERSION_GLASGOW_HASKELL(9, 2, 0, 0)
-    { newExtensions =
-        [ Extension.OverloadedRecordDot,
-          Extension.OverloadedRecordUpdate
-        ],
-      newWarnings = [(ghc_6_8_1, [Plugins.Opt_WarnMissingKindSignatures])]
-    }
-#endif
-
 ghc_9_2_1 :: GhcRelease
 ghc_9_2_1 =
   (ghcRelease [9, 2, 1])
@@ -363,9 +346,11 @@ ghc_9_2_1 =
         [ Extension.FieldSelectors,
           -- added in GHC 6.10, but unreliable before 9.2
           Extension.ImpredicativeTypes,
+          Extension.OverloadedRecordDot,
+          Extension.OverloadedRecordUpdate,
           Extension.UnliftedDatatypes
         ],
-      newWarnings = []
+      newWarnings = [(ghc_6_8_1, [Plugins.Opt_WarnMissingKindSignatures])]
     }
 #endif
 
@@ -387,15 +372,6 @@ ghc_9_6_1 =
     }
 #endif
 
-ghc_9_8 :: GhcRelease
-ghc_9_8 =
-  (ghcRelease [9, 8])
-#if MIN_VERSION_GLASGOW_HASKELL(9, 8, 0, 0)
-    { newExtensions = [],
-      newWarnings = [(ghc_7_4_1, [Plugins.Opt_WarnMissingPolyKindSignatures])]
-    }
-#endif
-
 ghc_9_8_1 :: GhcRelease
 ghc_9_8_1 =
   (ghcRelease [9, 8, 1])
@@ -404,7 +380,10 @@ ghc_9_8_1 =
         [ Extension.ExtendedLiterals,
           Extension.TypeAbstractions
         ],
-      newWarnings = [(ghc_7_8_1, [Plugins.Opt_WarnMissingRoleAnnotations])]
+      newWarnings =
+        [ (ghc_7_4_1, [Plugins.Opt_WarnMissingPolyKindSignatures]),
+          (ghc_7_8_1, [Plugins.Opt_WarnMissingRoleAnnotations])
+        ]
     }
 #endif
 
@@ -448,32 +427,26 @@ ghc_9_14_1 =
 
 all :: [GhcRelease]
 all =
-  [ ghc_6_0,
+  [ ghc_6_0_1,
     ghc_6_8_1,
     ghc_6_10_1,
-    ghc_6_12,
     ghc_6_12_1,
     ghc_7_0_1,
     ghc_7_2_1,
     ghc_7_4_1,
     ghc_7_6_1,
     ghc_7_8_1,
-    ghc_7_10,
     ghc_7_10_1,
     ghc_8_0_1,
     ghc_8_2_1,
     ghc_8_4_1,
-    ghc_8_6,
     ghc_8_6_1,
     ghc_8_8_1,
-    ghc_8_10,
     ghc_8_10_1,
     ghc_9_0_1,
-    ghc_9_2,
     ghc_9_2_1,
     ghc_9_2_4,
     ghc_9_6_1,
-    ghc_9_8,
     ghc_9_8_1,
     ghc_9_10_1,
     ghc_9_12_1,

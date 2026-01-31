@@ -10,26 +10,34 @@ Controls various GHC options and extensions to make compilation across multiple 
 
 Often GHC will add warnings to encourage users to make use of newer language features. However, if you’re like me, you use `-Weverything` and also support a large number of GHC versions. This can lead to a bunch of fragile conditionalization as you need to disable certain warnings _but not before those warnings were added to GHC_.
 
+This plugin does three things:
+
+1. reports if you use any [language extensions]() that aren’t supported by your minimum GHC version,
+2. automatically disables any [warnings]() where addressing them requires features that aren’t part of your minimum GHC version, and
+3. reports any warnings from no. 2 that were introduced before GHC 8.10.1[^1].
+
+[^1]: This is because before GHC 8.10.1, plugins couldn’t modify warning flags, so we report them to allow them to be manually disabled.
+
 So, currently, if you enable this plugin,
 
-| oldest GHC < | then this plugin will allow      | from GHC |
-| ------------ | -------------------------------- | -------- |
-| 6.8.1        | [`missing-kind-signatures`]      | 9.2      |
-| 7.4.1        | [`missing-poly-kind-signatures`] | 9.8      |
-| 7.8.1        | [`deriving-typeable`]            | 7.10     |
-| 〃           | [`missing-role-annotations`]     | 9.8.1    |
-| 8.2.1        | [`missing-deriving-strategies`]  | 8.8.1    |
-| 8.6.1        | [`star-is-type`]                 | 8.6      |
-| 8.10.1       | [`prepositive-qualified-module`] | 8.10     |
-| 9.14.1       | [`pattern-namespace-specifier`]  | 9.14.1   |
+| oldest GHC < | then this plugin will allow      | from GHC | auto unset |
+| ------------ | -------------------------------- | -------- | ---------- |
+| 6.8.1        | [`missing-kind-signatures`]      | 9.2.1    | ✔         |
+| 7.4.1        | [`missing-poly-kind-signatures`] | 9.8.1    | ✔         |
+| 7.8.1        | [`deriving-typeable`]            | 7.10.1   |            |
+| 〃           | [`missing-role-annotations`]     | 9.8.1    | ✔         |
+| 8.2.1        | [`missing-deriving-strategies`]  | 8.8.1    |            |
+| 8.6.1        | [`star-is-type`]                 | 8.6.1    |            |
+| 8.10.1       | [`prepositive-qualified-module`] | 8.10.1   | ✔         |
+| 9.14.1       | [`pattern-namespace-specifier`]  | 9.14.1   | ✔         |
 
 Note that there are often versions between the oldest one you support and the one where the plugin disables the warning. This is because the flag warning about a feature can be added long after the feature (for example, [role annotations](https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/roles.html#role-annotations) were added in GHC 7.8.1, but the warning to use them wasn’t added until GHC 9.8.1).
 
 ## usage
 
-Add the following to any stanzas[^1] in your Cabal package files.
+Add the following to any stanzas[^2] in your Cabal package files.
 
-[^1]: I like to put it in a `common` section that’s imported by all my stanzas.
+[^2]: I like to put it in a `common` section that’s imported by all my stanzas.
 
 ```cabal
 library
@@ -39,9 +47,7 @@ library
     -fplugin-opt GhcCompat:minVersion=8.8.1
 ```
 
-Note that in the last line, you must provide the oldest GHC version[^2] you support to the plugin, so it knows which flags to disable.
-
-[^2]: It’s recommend that you specify the full GHC version you use. You can specify fewer (or more), but if you specify `8.8` and a feature is documented as added in `8.8.1`, it won’t warn about not using that feature.
+Note that in the last line, you must provide the oldest GHC version you support to the plugin, so it knows which flags to disable.
 
 You can also add
 
@@ -51,7 +57,7 @@ You can also add
 
 (where `error` can also be `warn` (the default) or `no`) in order to control how the plugin informs you of enabled extensions that aren’t compatible with all of your supported GHC versions.
 
-**NB**: This plugin is intended to compile with any GHC you happen to have around[^3], but it currently won’t _do_ anything before GHC 7.10.1.
+**NB**: This plugin is intended to compile with any GHC you happen to have around[^3], but it currently won’t _do_ anything before GHC 7.10.1. That is, you can add this plugin to your Cabal file unconditionally, but unless you’re building or testing on a GHC at least as recent as 7.10, it won’t help you.
 
 [^3]: What good would a compatibility plugin be if it wasn’t extremely compatible?
 

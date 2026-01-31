@@ -19,91 +19,170 @@ import safe "base" Control.Applicative (pure)
 import safe "base" Control.Category ((.))
 import safe "base" Control.Monad ((=<<))
 import safe "base" Data.Bifunctor (first)
+import safe "base" Data.Char (isUpper, toLower)
 import safe "base" Data.Either (either)
-import safe "base" Data.Foldable (concatMap, foldl')
+import safe qualified "base" Data.Foldable as Foldable
 import safe "base" Data.Function (flip, ($))
 import safe "base" Data.Functor (fmap, (<$>))
-import safe "base" Data.List (intercalate, intersect)
-import safe "base" Data.List.NonEmpty (nonEmpty)
+import safe "base" Data.List (break, drop, filter, intercalate, intersect)
+import safe "base" Data.List.NonEmpty (NonEmpty ((:|)), nonEmpty)
 import safe "base" Data.Maybe (maybe)
 import safe "base" Data.Monoid (mconcat)
 import safe "base" Data.Ord ((<))
 import safe "base" Data.Semigroup (sconcat, (<>))
 import safe "base" Data.String (String)
-import safe "base" Data.Traversable (traverse)
 import safe "base" Data.Tuple (uncurry)
 import safe "base" Data.Version (Version, showVersion)
 import safe "base" System.Exit (die)
 import safe "base" System.IO (IO, putStr)
 import safe "base" Text.Show (show)
 import safe "ghc-boot-th" GHC.LanguageExtensions.Type (Extension)
-import safe qualified "ghc-boot-th" GHC.LanguageExtensions.Type as Extension
+import safe "this" GhcCompat.Supported.GhcRelease (GhcRelease)
 import safe qualified "this" GhcCompat.Supported.GhcRelease as GhcRelease
 import safe "this" GhcCompat.Supported.Opts (Opts)
 import safe qualified "this" GhcCompat.Supported.Opts as Opts
 #if MIN_VERSION_ghc(9, 0, 0)
-import "ghc" GHC.Plugins
-  ( Plugin,
-    defaultPlugin,
-    driverPlugin,
-    pluginRecompile,
-  )
+import "ghc" GHC.Plugins (Plugin, defaultPlugin)
 import qualified "ghc" GHC.Plugins as Plugins
 #else
-import "ghc" GhcPlugins
-  ( Plugin,
-    defaultPlugin,
-    driverPlugin,
-    pluginRecompile,
-  )
+import "ghc" GhcPlugins (Plugin, defaultPlugin)
 import qualified "ghc" GhcPlugins as Plugins
 #endif
-
--- When the function returns @f ()@, don’t throw away the unit. We want to know
--- if we change a return type and actually have a value to deal with (and it
--- just offends my linear type sensibilities).
---
--- FIXME: I tried to do this in my hlint config, but it didn’t silence the
--- warning for some reason, so figure out how to do it in the right place.
-{-# HLINT ignore "Use traverse_" #-}
 
 plugin :: Plugin
 plugin =
   defaultPlugin
-    { driverPlugin = \optStrs env ->
+#if MIN_VERSION_ghc(9, 2, 1)
+    { Plugins.driverPlugin = \optStrs env ->
         fmap (\dflags -> env {Plugins.hsc_dflags = dflags})
           . dflagsPlugin optStrs
           $ Plugins.extractDynFlags env,
-      pluginRecompile = Plugins.flagRecompile
+      Plugins.pluginRecompile = Plugins.flagRecompile
     }
+#elif MIN_VERSION_ghc(8, 10, 1)
+    { Plugins.dynflagsPlugin = dflagsPlugin,
+      Plugins.pluginRecompile = Plugins.flagRecompile
+    }
+#elif MIN_VERSION_ghc(8, 6, 1)
+    { Plugins.installCoreToDos = install,
+      Plugins.pluginRecompile = Plugins.purePlugin
+    }
+#else
+    { Plugins.installCoreToDos = install
+    }
+#endif
 
+#if MIN_VERSION_ghc(8, 10, 1)
 dflagsPlugin ::
   [Plugins.CommandLineOption] -> Plugins.DynFlags -> IO Plugins.DynFlags
 dflagsPlugin optStrs dflags = do
   opts <-
     either (die . (errorPrelude optStrs "error" <>)) pure $ Opts.parse optStrs
+  warnFlags optStrs opts dflags
+  warnExts optStrs opts dflags
+  pure $ updateFlags (Opts.minVersion opts) dflags
+
+updateFlags :: Version -> Plugins.DynFlags -> Plugins.DynFlags
+updateFlags minVersion dflags =
+  Foldable.foldl' Plugins.wopt_unset dflags $
+    warningFlags minVersion GhcRelease.all
+#else
+install ::
+  [Plugins.CommandLineOption] ->
+  [Plugins.CoreToDo] ->
+  Plugins.CoreM [Plugins.CoreToDo]
+install optStrs todos = do
+  opts <-
+    Plugins.liftIO . either (die . (errorPrelude optStrs "error" <>)) pure $
+      Opts.parse optStrs
+  dflags <- Plugins.getDynFlags
+  Plugins.liftIO $ warnFlags optStrs opts dflags
+  Plugins.liftIO $ warnExts optStrs opts dflags
+  pure todos
+#endif
+
+-- | If you support a GHC older than 8.10.1, we can’t disable the flags that
+--   were introduced before 8.10.1, because we have no way to modify
+--   `Plugins.Dynflags`, so those flags get reported like incompatible
+--   extensions.
+identifyProblematicFlags :: Version -> Plugins.DynFlags -> [Plugins.WarningFlag]
+identifyProblematicFlags minVersion dflags =
+  filter (flip Plugins.wopt dflags) . warningFlags minVersion $
+    filter
+      ((< GhcRelease.version GhcRelease.ghc_8_10_1) . GhcRelease.version)
+      GhcRelease.all
+
+-- | Try to print a flag the way it looks to a user.
+--
+-- __FIXME__: `show` on flags doesn’t display them nicely, but I don’t see
+--            another way to print them.
+formatFlag :: Plugins.WarningFlag -> String
+formatFlag = ("-W" <>) . intercalate "-" . splitWords [] . drop 8 . show
+  where
+    splitWords :: [String] -> String -> [String]
+    splitWords acc =
+      maybe
+        acc
+        ( \(h :| t) ->
+            uncurry splitWords . first ((acc <>) . pure . (toLower h :)) $
+              break isUpper t
+        )
+        . nonEmpty
+
+warnFlags :: [Plugins.CommandLineOption] -> Opts -> Plugins.DynFlags -> IO ()
+warnFlags optStrs opts dflags =
   let minVer = Opts.minVersion opts
-  traverse
-    ( \level ->
-        traverse
-          ( ( case level of
-                Opts.Warn -> putStr . (errorPrelude optStrs "warning" <>)
-                Opts.Error -> die . (errorPrelude optStrs "error" <>)
-            )
-              . ( ( "You’re using the following extensions, which aren’t compatible with ‘minVersion’ ("
-                      <> showVersion minVer
-                      <> "):\n"
-                  )
-                    <>
+   in maybe
+        (pure ())
+        ( \level ->
+            maybe
+              (pure ())
+              ( ( case level of
+                    Opts.Warn -> putStr . (errorPrelude optStrs "warning" <>)
+                    Opts.Error -> die . (errorPrelude optStrs "error" <>)
                 )
-              . sconcat
-              . fmap (\ext -> "  • " <> show ext <> "\n")
-          )
-          . nonEmpty
-          $ usedIncompatibleExtensions minVer dflags
-    )
-    $ Opts.reportIncompatibleExtensions opts
-  pure $ updateFlags minVer dflags
+                  . ( ( "You have the following warnings enabled, which require the use of features\n    not available in ‘minVersion’ ("
+                          <> showVersion minVer
+                          <> "). Unfortunately, these warnings were\n    introduced before plugins could disable warnings automatically, so it must\n    be done manually:\n"
+                      )
+                        <>
+                    )
+                  . sconcat
+                  . fmap (\flag -> "  • " <> formatFlag flag <> "\n")
+              )
+              . nonEmpty
+              $ identifyProblematicFlags minVer dflags
+        )
+        $ Opts.reportIncompatibleExtensions opts
+
+warnExts :: [Plugins.CommandLineOption] -> Opts -> Plugins.DynFlags -> IO ()
+warnExts optStrs opts dflags =
+  let minVer = Opts.minVersion opts
+   in maybe
+        (pure ())
+        ( \level ->
+            maybe
+              (pure ())
+              ( ( case level of
+                    Opts.Warn -> putStr . (errorPrelude optStrs "warning" <>)
+                    Opts.Error -> die . (errorPrelude optStrs "error" <>)
+                )
+                  . ( ( "You’re using the following extensions, which aren’t compatible with\n   ‘minVersion’ ("
+                          <> showVersion minVer
+                          <> "):\n"
+                      )
+                        <>
+                    )
+                  . sconcat
+                  -- FIXME: Most extensions have the same constructor name as
+                  --        the extension name, but not all of them, so `show`
+                  --        doesn’t always do the right thing.
+                  . fmap (\ext -> "  • " <> show ext <> "\n")
+              )
+              . nonEmpty
+              $ usedIncompatibleExtensions minVer dflags
+        )
+        $ Opts.reportIncompatibleExtensions opts
 
 errorPrelude :: [Plugins.CommandLineOption] -> String -> String
 errorPrelude optStrs prefix =
@@ -112,10 +191,6 @@ errorPrelude optStrs prefix =
     <> ": [GhcCompat plugin] ["
     <> intercalate ", " optStrs
     <> "]\n    "
-
-updateFlags :: Version -> Plugins.DynFlags -> Plugins.DynFlags
-updateFlags minVersion dflags =
-  foldl' Plugins.wopt_unset dflags $ warningFlags minVersion
 
 -- | A list of extensions incompatible with the provided version that are used
 --   (regardless of `Extension.OnOff`).
@@ -142,23 +217,6 @@ usedIncompatibleExtensions minVersion =
       Plugins.Off a -> a
       Plugins.On a -> a
 
--- |
---
---  __NB__: Safe Haskell is managed elsewhere, but was added in GHC 7.2.1
---          (@Unsafe@ was added in 7.4.1).
-_extensions :: [Extension]
-_extensions =
-  [ -- I think these first few have been removed, so they should always warn,
-    -- for forward incompatibility.
-    Extension.AlternativeLayoutRule,
-    Extension.AlternativeLayoutRuleTransitional,
-    Extension.AutoDeriveTypeable,
-    Extension.JavaScriptFFI,
-    Extension.ParallelArrays,
-    Extension.RelaxedLayout,
-    Extension.RelaxedPolyRec
-  ]
-
 -- | A list of /all/ extensions that are incompatible with the provided version.
 incompatibleExtensions :: Version -> [Extension]
 incompatibleExtensions minVersion =
@@ -169,11 +227,13 @@ incompatibleExtensions minVersion =
   )
     =<< GhcRelease.all
 
-warningFlags :: Version -> [Plugins.WarningFlag]
-warningFlags =
-  mconcat $
-    disableIfOlder . fmap (first GhcRelease.version) . GhcRelease.newWarnings
-      <$> GhcRelease.all
+warningFlags :: Version -> [GhcRelease] -> [Plugins.WarningFlag]
+warningFlags minVersion releases =
+  mconcat
+    ( disableIfOlder . fmap (first GhcRelease.version) . GhcRelease.newWarnings
+        <$> releases
+    )
+    minVersion
 
 whenOlder ::
   Version -> Version -> [Plugins.WarningFlag] -> [Plugins.WarningFlag]
@@ -182,4 +242,4 @@ whenOlder minVersion flagAddedVersion flags =
 
 disableIfOlder ::
   [(Version, [Plugins.WarningFlag])] -> Version -> [Plugins.WarningFlag]
-disableIfOlder = flip $ concatMap . uncurry . whenOlder
+disableIfOlder = flip $ Foldable.concatMap . uncurry . whenOlder
