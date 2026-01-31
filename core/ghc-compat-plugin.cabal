@@ -1,6 +1,5 @@
-cabal-version: 3.0
--- ^ Cabal 3.0 is the first with the `Universal-FOSS-exception-1.0` SPDX license
---   exception.
+cabal-version: 2.2
+-- ^ Cabal 2.2 is the first with SPDX license support.
 
 name: ghc-compat-plugin
 version: 0.0.1.0
@@ -11,7 +10,10 @@ description: Controls various GHC options and extensions to make compilation
 maintainer: Greg Pfeil <greg@technomadic.org>
 author: Greg Pfeil <greg@technomadic.org>
 copyright: 2026 Greg Pfeil
-license: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- GHC before 8.8.1 (and Cabal before 3.0) can’t deal with the
+-- `Universal-FOSS-exception-1.0` SPDX license exception. Since it only makes
+-- the license more lax, we just omit it from this field.
+license: AGPL-3.0-only OR LicenseRef-commercial
 license-files:
   LICENSE
   LICENSE.AGPL-3.0-only
@@ -24,23 +26,21 @@ extra-doc-files:
   README.md
   docs/*.md
 tested-with:
-  GHC == {
-    7.10.3,
-    8.0.2,
-    8.2.2,
-    8.4.1,
-    8.6.1,
-    8.8.1,
-    8.10.1,
-    9.0.1,
-    9.2.1,
-    9.4.1, 9.4.8,
-    9.6.1, 9.6.7,
-    9.8.1, 9.8.4,
-    9.10.1, 9.10.2, 9.10.3,
-    9.12.1, 9.12.2,
-    9.14.1
-  }
+  GHC == 7.10.3
+  || == 8.0.2
+  || == 8.2.2
+  || == 8.4.1
+  || == 8.6.1
+  || == 8.8.1
+  || == 8.10.1
+  || == 9.0.1
+  || == 9.2.1
+  || == 9.4.1 || == 9.4.8
+  || == 9.6.1 || == 9.6.7
+  || == 9.8.1 || == 9.8.4
+  || == 9.10.1 || == 9.10.2 || == 9.10.3
+  || == 9.12.1 || == 9.12.2
+  || == 9.14.1
 
 homepage: https://github.com/sellout/ghc-compat-plugin#readme
 bug-reports: https://github.com/sellout/ghc-compat-plugin/issues
@@ -64,14 +64,9 @@ custom-setup
     --       as high as `cabal-version` at the top of this file, and Hackage
     --       requires it to have _some_ upper bound. (Since there’s no direct
     --       dependency, it doesn’t use PVP bounds.)
-    --
-    -- TODO: Due to haskell/cabal#9375, 3.10.3 is required in order to load
-    --       plugins from a `ghc-options` field. Unfortunately, GHCs prior to
-    --       9.8.3 include an older Cabal, so a newer one may need to be
-    --       manually installed.
-    Cabal >= 3.10.3 && < 99,
-    base ^>= {4.8.2, 4.9.0, 4.10.0, 4.11.0, 4.12.0, 4.13.0, 4.14.0, 4.15.0, 4.16.0, 4.17.0, 4.18.0, 4.19.0, 4.20.0, 4.21.0, 4.22.0},
-    cabal-doctest ^>= {1.0.0},
+    Cabal >= 2.2 && < 99,
+    base ^>= 4.8.2 || ^>= 4.9.0 || ^>= 4.10.0 || ^>= 4.11.0 || ^>= 4.12.0 || ^>= 4.13.0 || ^>= 4.14.0 || ^>= 4.15.0 || ^>= 4.16.0 || ^>= 4.17.0 || ^>= 4.18.0 || ^>= 4.19.0 || ^>= 4.20.0 || ^>= 4.21.0 || ^>= 4.22.0,
+    cabal-doctest ^>= 1.0.0,
 
 flag noisy-deprecations
   description:
@@ -88,7 +83,7 @@ flag noisy-deprecations
 common defaults
   default-language: Haskell98
   build-depends:
-    base ^>= {4.8.2, 4.9.0, 4.10.0, 4.11.0, 4.12.0, 4.13.0, 4.14.0, 4.15.0, 4.16.0, 4.17.0, 4.18.0, 4.19.0, 4.20.0, 4.21.0, 4.22.0},
+    base ^>= 4.8.2 || ^>= 4.9.0 || ^>= 4.10.0 || ^>= 4.11.0 || ^>= 4.12.0 || ^>= 4.13.0 || ^>= 4.14.0 || ^>= 4.15.0 || ^>= 4.16.0 || ^>= 4.17.0 || ^>= 4.18.0 || ^>= 4.19.0 || ^>= 4.20.0 || ^>= 4.21.0 || ^>= 4.22.0,
   ghc-options:
   if impl(ghc >= 8.0.1)
     ghc-options:
@@ -140,8 +135,8 @@ library
   hs-source-dirs:
     src
   build-depends:
-    ghc ^>= {7.10.3, 8.0.2, 8.2.2, 8.4.1, 8.6.1, 8.8.1, 8.10.1, 9.0.1, 9.2.1, 9.4.1, 9.6.1, 9.8.1, 9.10.1, 9.12.1, 9.14.1},
-    ghc-boot-th ^>= {7.10.3, 8.0.2, 8.2.2, 8.4.1, 8.6.1, 8.8.1, 8.10.1, 9.0.1, 9.2.1, 9.4.1, 9.6.1, 9.8.1, 9.10.1, 9.12.1, 9.14.1},
+    ghc ^>= 7.10.3 || ^>= 8.0.2 || ^>= 8.2.2 || ^>= 8.4.1 || ^>= 8.6.1 || ^>= 8.8.1 || ^>= 8.10.1 || ^>= 9.0.1 || ^>= 9.2.1 || ^>= 9.4.1 || ^>= 9.6.1 || ^>= 9.8.1 || ^>= 9.10.1 || ^>= 9.12.1 || ^>= 9.14.1,
+    ghc-boot-th ^>= 7.10.3 || ^>= 8.0.2 || ^>= 8.2.2 || ^>= 8.4.1 || ^>= 8.6.1 || ^>= 8.8.1 || ^>= 8.10.1 || ^>= 9.0.1 || ^>= 9.2.1 || ^>= 9.4.1 || ^>= 9.6.1 || ^>= 9.8.1 || ^>= 9.10.1 || ^>= 9.12.1 || ^>= 9.14.1,
   exposed-modules:
     GhcCompat
   if impl(ghc >= 7.10.1)
@@ -168,7 +163,7 @@ test-suite doctests
     tests
   main-is: doctests.hs
   build-depends:
-    doctest ^>= {0.14.0, 0.16.0, 0.18.1, 0.20.1, 0.21.1, 0.22.2, 0.24.0},
+    doctest ^>= 0.14.0 || ^>= 0.16.0 || ^>= 0.18.1 || ^>= 0.20.1 || ^>= 0.21.1 || ^>= 0.22.2 || ^>= 0.24.0,
     ghc-compat-plugin,
   if impl(ghc >= 8.10.1)
     ghc-options:
