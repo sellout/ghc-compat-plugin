@@ -1,8 +1,4 @@
-cabal-version: 2.2
--- ^ Cabal 2.2 is the first with SPDX license support and `common` stanzas..
--- Technically it allows trailing commas in dependency fields, but something
--- certainly fails to parse them.
---
+cabal-version: 2.0
 -- https://cabal.readthedocs.io/en/stable/file-format-changelog.html
 
 name: ghc-compat-plugin
@@ -17,7 +13,7 @@ copyright: 2026 Greg Pfeil
 -- GHC before 8.8.1 (and Cabal before 3.0) can’t deal with the
 -- `Universal-FOSS-exception-1.0` SPDX license exception. Since it only makes
 -- the license more lax, we just omit it from this field.
-license: AGPL-3.0-only
+license: AGPL-3
 license-files:
   LICENSE
   LICENSE.AGPL-3.0-only
@@ -71,7 +67,7 @@ custom-setup
     --
     -- NB: This file parses fine with the Cabal 2.2 format, but the actual
     --     library fails to handle the license field before 2.4.
-    Cabal >=2.2 && < 99,
+    Cabal >=2.0 && < 99,
     base ^>=4.8.2 || ^>=4.9.0 || ^>=4.10.0 || ^>=4.11.0 || ^>=4.12.0 || ^>=4.13.0 || ^>=4.14.0 || ^>=4.15.0 || ^>=4.16.0 || ^>=4.17.0 || ^>=4.18.0 || ^>=4.19.0 || ^>=4.20.0 || ^>=4.21.0 || ^>=4.22.0,
     cabal-doctest ^>=1.0.0
 
@@ -87,11 +83,14 @@ flag noisy-deprecations
   -- Because disabling this flag won’t help the solver.
   manual: True
 
-common defaults
+library
   default-language: Haskell98
+  hs-source-dirs:
+    src
   build-depends:
-    base ^>=4.8.2 || ^>=4.9.0 || ^>=4.10.0 || ^>=4.11.0 || ^>=4.12.0 || ^>=4.13.0 || ^>=4.14.0 || ^>=4.15.0 || ^>=4.16.0 || ^>=4.17.0 || ^>=4.18.0 || ^>=4.19.0 || ^>=4.20.0 || ^>=4.21.0 || ^>=4.22.0
-  ghc-options:
+    base ^>=4.8.2 || ^>=4.9.0 || ^>=4.10.0 || ^>=4.11.0 || ^>=4.12.0 || ^>=4.13.0 || ^>=4.14.0 || ^>=4.15.0 || ^>=4.16.0 || ^>=4.17.0 || ^>=4.18.0 || ^>=4.19.0 || ^>=4.20.0 || ^>=4.21.0 || ^>=4.22.0,
+    ghc ^>=7.10.3 || ^>=8.0.2 || ^>=8.2.2 || ^>=8.4.1 || ^>=8.6.1 || ^>=8.8.1 || ^>=8.10.1 || ^>=9.0.1 || ^>=9.2.1 || ^>=9.4.1 || ^>=9.6.1 || ^>=9.8.1 || ^>=9.10.1 || ^>=9.12.1 || ^>=9.14.1,
+    ghc-boot-th ^>=7.10.3 || ^>=8.0.2 || ^>=8.2.2 || ^>=8.4.1 || ^>=8.6.1 || ^>=8.8.1 || ^>=8.10.1 || ^>=9.0.1 || ^>=9.2.1 || ^>=9.4.1 || ^>=9.6.1 || ^>=9.8.1 || ^>=9.10.1 || ^>=9.12.1 || ^>=9.14.1
   if impl(ghc >= 8.0.1)
     ghc-options:
       -Weverything
@@ -136,14 +135,6 @@ common defaults
   if flag(noisy-deprecations)
     cpp-options:
       -DSELLOUT_NOISY_DEPRECATIONS
-
-library
-  import: defaults
-  hs-source-dirs:
-    src
-  build-depends:
-    ghc ^>=7.10.3 || ^>=8.0.2 || ^>=8.2.2 || ^>=8.4.1 || ^>=8.6.1 || ^>=8.8.1 || ^>=8.10.1 || ^>=9.0.1 || ^>=9.2.1 || ^>=9.4.1 || ^>=9.6.1 || ^>=9.8.1 || ^>=9.10.1 || ^>=9.12.1 || ^>=9.14.1,
-    ghc-boot-th ^>=7.10.3 || ^>=8.0.2 || ^>=8.2.2 || ^>=8.4.1 || ^>=8.6.1 || ^>=8.8.1 || ^>=8.10.1 || ^>=9.0.1 || ^>=9.2.1 || ^>=9.4.1 || ^>=9.6.1 || ^>=9.8.1 || ^>=9.10.1 || ^>=9.12.1 || ^>=9.14.1
   exposed-modules:
     GhcCompat
   if impl(ghc >= 7.10.1)
@@ -164,29 +155,27 @@ library
       GhcCompat.Unsupported
 
 test-suite doctests
-  import: defaults
+  default-language: Haskell98
   type: exitcode-stdio-1.0
   hs-source-dirs:
     tests
   main-is: doctests.hs
   build-depends:
+    base ^>=4.8.2 || ^>=4.9.0 || ^>=4.10.0 || ^>=4.11.0 || ^>=4.12.0 || ^>=4.13.0 || ^>=4.14.0 || ^>=4.15.0 || ^>=4.16.0 || ^>=4.17.0 || ^>=4.18.0 || ^>=4.19.0 || ^>=4.20.0 || ^>=4.21.0 || ^>=4.22.0,
     doctest ^>=0.14.0 || ^>=0.16.0 || ^>=0.18.1 || ^>=0.20.1 || ^>=0.21.1 || ^>=0.22.2 || ^>=0.24.0,
     ghc-compat-plugin
-  if impl(ghc >= 8.10.1)
-    ghc-options:
-      -- `doctest` requires the package containing the doctests as a dependency
-      -- to ensure it gets built before this test-suite, even though the package
-      -- appears to be unused.
-      -Wno-unused-packages
   -- TODO: The sections below here are necessary because we don’t have control
   --       over the generated `Build_doctests.hs` file. So we have to silence
   --       all of its warnings one way or another.
   if impl(ghc >= 8.0.1)
     ghc-options:
+      -Weverything
       -Wno-missing-import-lists
       -Wno-safe
+      -Wno-unsafe
   else
     ghc-options:
+      -Wall
       -fno-warn-missing-import-lists
   if impl(ghc >= 8.4.1)
     ghc-options:
@@ -194,6 +183,15 @@ test-suite doctests
   if impl(ghc >= 8.8.1)
     ghc-options:
       -Wno-missing-deriving-strategies
+  if impl(ghc >= 8.10.1)
+    ghc-options:
+      -- `doctest` requires the package containing the doctests as a dependency
+      -- to ensure it gets built before this test-suite, even though the package
+      -- appears to be unused.
+      -Wno-unused-packages
+  if impl(ghc >= 9.2.1)
+    ghc-options:
+      -Wno-missing-kind-signatures
   default-extensions:
     -- 6.8.1
     NoImplicitPrelude
