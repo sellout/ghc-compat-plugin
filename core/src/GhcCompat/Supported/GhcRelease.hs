@@ -4,7 +4,6 @@
 {-# LANGUAGE Trustworthy #-}
 -- GHC 6.10
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# OPTIONS_GHC -fplugin-opt NoRecursion:ignore-decls:ghc_8_6_1,ghc_8_10_1,ghc_9_14_1 #-}
 
 -- | The implementation of the plugin, but this module is only loaded on
 --   GHC 7.10+.
