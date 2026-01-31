@@ -1,5 +1,6 @@
 cabal-version: 2.2
--- ^ Cabal 2.2 is the first with SPDX license support.
+-- ^ Cabal 2.2 is the first with SPDX license support and `common` stanzas..
+-- https://cabal.readthedocs.io/en/stable/file-format-changelog.html
 
 name: ghc-compat-plugin
 version: 0.0.1.0
@@ -13,7 +14,7 @@ copyright: 2026 Greg Pfeil
 -- GHC before 8.8.1 (and Cabal before 3.0) can’t deal with the
 -- `Universal-FOSS-exception-1.0` SPDX license exception. Since it only makes
 -- the license more lax, we just omit it from this field.
-license: AGPL-3.0-only OR LicenseRef-commercial
+license: AGPL-3.0-only
 license-files:
   LICENSE
   LICENSE.AGPL-3.0-only
@@ -26,21 +27,21 @@ extra-doc-files:
   README.md
   docs/*.md
 tested-with:
-  GHC == 7.10.3
-  || == 8.0.2
-  || == 8.2.2
-  || == 8.4.1
-  || == 8.6.1
-  || == 8.8.1
-  || == 8.10.1
-  || == 9.0.1
-  || == 9.2.1
-  || == 9.4.1 || == 9.4.8
-  || == 9.6.1 || == 9.6.7
-  || == 9.8.1 || == 9.8.4
-  || == 9.10.1 || == 9.10.2 || == 9.10.3
-  || == 9.12.1 || == 9.12.2
-  || == 9.14.1
+  GHC ==7.10.3
+  || ==8.0.2
+  || ==8.2.2
+  || ==8.4.1
+  || ==8.6.1
+  || ==8.8.1
+  || ==8.10.1
+  || ==9.0.1
+  || ==9.2.1
+  || ==9.4.1 || ==9.4.8
+  || ==9.6.1 || ==9.6.7
+  || ==9.8.1 || ==9.8.4
+  || ==9.10.1 || ==9.10.2 || ==9.10.3
+  || ==9.12.1 || ==9.12.2
+  || ==9.14.1
 
 homepage: https://github.com/sellout/ghc-compat-plugin#readme
 bug-reports: https://github.com/sellout/ghc-compat-plugin/issues
@@ -67,9 +68,9 @@ custom-setup
     --
     -- NB: This file parses fine with the Cabal 2.2 format, but the actual
     --     library fails to handle the license field before 2.4.
-    Cabal >= 3.0 && < 99,
-    base ^>= 4.8.2 || ^>= 4.9.0 || ^>= 4.10.0 || ^>= 4.11.0 || ^>= 4.12.0 || ^>= 4.13.0 || ^>= 4.14.0 || ^>= 4.15.0 || ^>= 4.16.0 || ^>= 4.17.0 || ^>= 4.18.0 || ^>= 4.19.0 || ^>= 4.20.0 || ^>= 4.21.0 || ^>= 4.22.0,
-    cabal-doctest ^>= 1.0.0,
+    Cabal >=2.2 && < 99,
+    base ^>=4.8.2 || ^>=4.9.0 || ^>=4.10.0 || ^>=4.11.0 || ^>=4.12.0 || ^>=4.13.0 || ^>=4.14.0 || ^>=4.15.0 || ^>=4.16.0 || ^>=4.17.0 || ^>=4.18.0 || ^>=4.19.0 || ^>=4.20.0 || ^>=4.21.0 || ^>=4.22.0,
+    cabal-doctest ^>=1.0.0,
 
 flag noisy-deprecations
   description:
@@ -86,7 +87,7 @@ flag noisy-deprecations
 common defaults
   default-language: Haskell98
   build-depends:
-    base ^>= 4.8.2 || ^>= 4.9.0 || ^>= 4.10.0 || ^>= 4.11.0 || ^>= 4.12.0 || ^>= 4.13.0 || ^>= 4.14.0 || ^>= 4.15.0 || ^>= 4.16.0 || ^>= 4.17.0 || ^>= 4.18.0 || ^>= 4.19.0 || ^>= 4.20.0 || ^>= 4.21.0 || ^>= 4.22.0,
+    base ^>=4.8.2 || ^>=4.9.0 || ^>=4.10.0 || ^>=4.11.0 || ^>=4.12.0 || ^>=4.13.0 || ^>=4.14.0 || ^>=4.15.0 || ^>=4.16.0 || ^>=4.17.0 || ^>=4.18.0 || ^>=4.19.0 || ^>=4.20.0 || ^>=4.21.0 || ^>=4.22.0,
   ghc-options:
   if impl(ghc >= 8.0.1)
     ghc-options:
@@ -138,8 +139,8 @@ library
   hs-source-dirs:
     src
   build-depends:
-    ghc ^>= 7.10.3 || ^>= 8.0.2 || ^>= 8.2.2 || ^>= 8.4.1 || ^>= 8.6.1 || ^>= 8.8.1 || ^>= 8.10.1 || ^>= 9.0.1 || ^>= 9.2.1 || ^>= 9.4.1 || ^>= 9.6.1 || ^>= 9.8.1 || ^>= 9.10.1 || ^>= 9.12.1 || ^>= 9.14.1,
-    ghc-boot-th ^>= 7.10.3 || ^>= 8.0.2 || ^>= 8.2.2 || ^>= 8.4.1 || ^>= 8.6.1 || ^>= 8.8.1 || ^>= 8.10.1 || ^>= 9.0.1 || ^>= 9.2.1 || ^>= 9.4.1 || ^>= 9.6.1 || ^>= 9.8.1 || ^>= 9.10.1 || ^>= 9.12.1 || ^>= 9.14.1,
+    ghc ^>=7.10.3 || ^>=8.0.2 || ^>=8.2.2 || ^>=8.4.1 || ^>=8.6.1 || ^>=8.8.1 || ^>=8.10.1 || ^>=9.0.1 || ^>=9.2.1 || ^>=9.4.1 || ^>=9.6.1 || ^>=9.8.1 || ^>=9.10.1 || ^>=9.12.1 || ^>=9.14.1,
+    ghc-boot-th ^>=7.10.3 || ^>=8.0.2 || ^>=8.2.2 || ^>=8.4.1 || ^>=8.6.1 || ^>=8.8.1 || ^>=8.10.1 || ^>=9.0.1 || ^>=9.2.1 || ^>=9.4.1 || ^>=9.6.1 || ^>=9.8.1 || ^>=9.10.1 || ^>=9.12.1 || ^>=9.14.1,
   exposed-modules:
     GhcCompat
   if impl(ghc >= 7.10.1)
@@ -166,7 +167,7 @@ test-suite doctests
     tests
   main-is: doctests.hs
   build-depends:
-    doctest ^>= 0.14.0 || ^>= 0.16.0 || ^>= 0.18.1 || ^>= 0.20.1 || ^>= 0.21.1 || ^>= 0.22.2 || ^>= 0.24.0,
+    doctest ^>=0.14.0 || ^>=0.16.0 || ^>=0.18.1 || ^>=0.20.1 || ^>=0.21.1 || ^>=0.22.2 || ^>=0.24.0,
     ghc-compat-plugin,
   if impl(ghc >= 8.10.1)
     ghc-options:
