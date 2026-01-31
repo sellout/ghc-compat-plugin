@@ -278,7 +278,9 @@ ghc_8_2_1 =
 ghc_8_4_1 :: GhcRelease
 ghc_8_4_1 =
   (ghcRelease [8, 4, 1])
-#if MIN_VERSION_GLASGOW_HASKELL(8, 4, 1, 0)
+
+-- Some versions of GHC error if the third field isn’t 0.
+#if MIN_VERSION_GLASGOW_HASKELL(8, 4, 0, 0)
     { newExtensions =
         [ Extension.EmptyDataDeriving,
           Extension.HexFloatLiterals
@@ -290,7 +292,9 @@ ghc_8_4_1 =
 ghc_8_6_1 :: GhcRelease
 ghc_8_6_1 =
   (ghcRelease [8, 6, 1])
-#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 1, 0)
+
+-- Some versions of GHC error if the third field isn’t 0.
+#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 0, 0)
     { newExtensions =
         [ Extension.BlockArguments,
           Extension.DerivingVia,
@@ -305,7 +309,9 @@ ghc_8_6_1 =
 ghc_8_8_1 :: GhcRelease
 ghc_8_8_1 =
   (ghcRelease [8, 8, 1])
-#if MIN_VERSION_GLASGOW_HASKELL(8, 8, 1, 0)
+
+-- Some versions of GHC error if the third field isn’t 0.
+#if MIN_VERSION_GLASGOW_HASKELL(8, 8, 0, 0)
     { newExtensions = [],
       newWarnings = [(ghc_8_2_1, [Plugins.Opt_WarnMissingDerivingStrategies])]
     }
@@ -314,7 +320,9 @@ ghc_8_8_1 =
 ghc_8_10_1 :: GhcRelease
 ghc_8_10_1 =
   (ghcRelease [8, 10, 1])
-#if MIN_VERSION_GLASGOW_HASKELL(8, 10, 1, 0)
+
+-- Some versions of GHC error if the third field isn’t 0.
+#if MIN_VERSION_GLASGOW_HASKELL(8, 10, 0, 0)
     { newExtensions =
         [ Extension.CUSKs,
           Extension.ImportQualifiedPost,
@@ -328,7 +336,9 @@ ghc_8_10_1 =
 ghc_9_0_1 :: GhcRelease
 ghc_9_0_1 =
   (ghcRelease [9, 0, 1])
-#if MIN_VERSION_GLASGOW_HASKELL(9, 0, 1, 0)
+
+-- Some versions of GHC error if the third field isn’t 0.
+#if MIN_VERSION_GLASGOW_HASKELL(9, 0, 0, 0)
     { newExtensions =
         [ Extension.LexicalNegation,
           Extension.LinearTypes,
@@ -341,7 +351,9 @@ ghc_9_0_1 =
 ghc_9_2_1 :: GhcRelease
 ghc_9_2_1 =
   (ghcRelease [9, 2, 1])
-#if MIN_VERSION_GLASGOW_HASKELL(9, 2, 1, 0)
+
+-- Some versions of GHC error if the third field isn’t 0.
+#if MIN_VERSION_GLASGOW_HASKELL(9, 2, 0, 0)
     { newExtensions =
         [ Extension.FieldSelectors,
           -- added in GHC 6.10, but unreliable before 9.2

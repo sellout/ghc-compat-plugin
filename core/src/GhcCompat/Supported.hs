@@ -24,7 +24,7 @@ import safe "base" Data.Either (either)
 import safe qualified "base" Data.Foldable as Foldable
 import safe "base" Data.Function (flip, ($))
 import safe "base" Data.Functor (fmap, (<$>))
-import safe "base" Data.List (break, drop, filter, intercalate, intersect)
+import safe qualified "base" Data.List as List
 import safe "base" Data.List.NonEmpty (NonEmpty ((:|)), nonEmpty)
 import safe "base" Data.Maybe (maybe)
 import safe "base" Data.Monoid (mconcat)
@@ -36,7 +36,6 @@ import safe "base" Data.Version (Version, showVersion)
 import safe "base" System.Exit (die)
 import safe "base" System.IO (IO, putStr)
 import safe "base" Text.Show (show)
-import qualified "ghc" GHC.Data.EnumSet as EnumSet
 import safe "ghc-boot-th" GHC.LanguageExtensions.Type (Extension)
 import safe "this" GhcCompat.Supported.GhcRelease (GhcRelease)
 import safe qualified "this" GhcCompat.Supported.GhcRelease as GhcRelease
@@ -57,7 +56,7 @@ plugin =
     { Plugins.driverPlugin = \optStrs env ->
         fmap (\dflags -> env {Plugins.hsc_dflags = dflags})
           . dflagsPlugin optStrs
-          $ Plugins.extractDynFlags env,
+          $ Plugins.hsc_dflags env,
       Plugins.pluginRecompile = Plugins.flagRecompile
     }
 #elif MIN_VERSION_ghc(8, 10, 1)
@@ -108,8 +107,8 @@ install optStrs todos = do
 --   extensions.
 identifyProblematicFlags :: Version -> Plugins.DynFlags -> [Plugins.WarningFlag]
 identifyProblematicFlags minVersion dflags =
-  filter (flip Plugins.wopt dflags) . warningFlags minVersion $
-    filter
+  List.filter (flip Plugins.wopt dflags) . warningFlags minVersion $
+    List.filter
       ((< GhcRelease.version GhcRelease.ghc_8_10_1) . GhcRelease.version)
       GhcRelease.all
 
@@ -118,7 +117,7 @@ identifyProblematicFlags minVersion dflags =
 -- __FIXME__: `show` on flags doesn’t display them nicely, but I don’t see
 --            another way to print them.
 formatFlag :: Plugins.WarningFlag -> String
-formatFlag = ("-W" <>) . intercalate "-" . splitWords [] . drop 8 . show
+formatFlag = ("-W" <>) . List.intercalate "-" . splitWords [] . List.drop 8 . show
   where
     splitWords :: [String] -> String -> [String]
     splitWords acc =
@@ -126,7 +125,7 @@ formatFlag = ("-W" <>) . intercalate "-" . splitWords [] . drop 8 . show
         acc
         ( \(h :| t) ->
             uncurry splitWords . first ((acc <>) . pure . (toLower h :)) $
-              break isUpper t
+              List.break isUpper t
         )
         . nonEmpty
 
@@ -190,11 +189,16 @@ errorPrelude optStrs prefix =
   "on the commandline: "
     <> prefix
     <> ": [GhcCompat plugin] ["
-    <> intercalate ", " optStrs
+    <> List.intercalate ", " optStrs
     <> "]\n    "
 
 -- | A list of extensions incompatible with the provided version that are used
 --   (regardless of `Extension.OnOff`).
+--
+--  __NB__: Prior to GHC 9.6.1, there doesn’t seem to be a way to get all of the
+--          extensions regardless of whether they’re off or on (this is helpful,
+--          because even @NoFoo@ is going to fail before @Foo@ is added to the
+--          compiler).
 --
 --  __TODO__: These are extensions in the ghc 9.14.1 library that aren’t
 --            documented in the manual. I think they’re ones that have been
@@ -209,8 +213,19 @@ errorPrelude optStrs prefix =
 --          - `Extension.RelaxedLayout`, and
 --          - `Extension.RelaxedPolyRec`.
 usedIncompatibleExtensions :: Version -> Plugins.DynFlags -> [Extension]
+#if MIN_VERSION_ghc(9, 6, 1)
 usedIncompatibleExtensions minVersion =
-  intersect (incompatibleExtensions minVersion) . EnumSet.toList . Plugins.extensionFlags
+  List.intersect (incompatibleExtensions minVersion)
+    . fmap removeSwitch
+    . Plugins.extensions
+  where
+    removeSwitch = \case
+      Plugins.Off a -> a
+      Plugins.On a -> a
+#else
+usedIncompatibleExtensions minVersion dflags =
+  List.filter (flip Plugins.xopt dflags) $ incompatibleExtensions minVersion
+#endif
 
 -- | A list of /all/ extensions that are incompatible with the provided version.
 incompatibleExtensions :: Version -> [Extension]
