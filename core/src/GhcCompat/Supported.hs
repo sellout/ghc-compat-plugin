@@ -36,6 +36,7 @@ import safe "base" Data.Version (Version, showVersion)
 import safe "base" System.Exit (die)
 import safe "base" System.IO (IO, putStr)
 import safe "base" Text.Show (show)
+import qualified "ghc" GHC.Data.EnumSet as EnumSet
 import safe "ghc-boot-th" GHC.LanguageExtensions.Type (Extension)
 import safe "this" GhcCompat.Supported.GhcRelease (GhcRelease)
 import safe qualified "this" GhcCompat.Supported.GhcRelease as GhcRelease
@@ -209,13 +210,7 @@ errorPrelude optStrs prefix =
 --          - `Extension.RelaxedPolyRec`.
 usedIncompatibleExtensions :: Version -> Plugins.DynFlags -> [Extension]
 usedIncompatibleExtensions minVersion =
-  intersect (incompatibleExtensions minVersion)
-    . fmap removeSwitch
-    . Plugins.extensions
-  where
-    removeSwitch = \case
-      Plugins.Off a -> a
-      Plugins.On a -> a
+  intersect (incompatibleExtensions minVersion) . EnumSet.toList . Plugins.extensionFlags
 
 -- | A list of /all/ extensions that are incompatible with the provided version.
 incompatibleExtensions :: Version -> [Extension]

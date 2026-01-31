@@ -16,5 +16,9 @@ program-options
 
 tests: True
 
+constraints:
+  -- 0.2.0 is the first version that lets us ignore violations
+  no-recursion >= 0.2.0,
+
 packages:
   ./core/ghc-compat-plugin.cabal
