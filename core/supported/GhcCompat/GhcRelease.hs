@@ -7,7 +7,7 @@
 
 -- | The implementation of the plugin, but this module is only loaded on
 --   GHC 7.10+.
-module GhcCompat.Supported.GhcRelease
+module GhcCompat.GhcRelease
   ( GhcRelease,
     all,
     newExtensions,

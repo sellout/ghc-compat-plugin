@@ -6,8 +6,8 @@
 {-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
 
 -- | The implementation of the plugin, but this module is only loaded on
---   GHC 7.10+.
-module GhcCompat.Supported
+--   GHC 8.0+ currently.
+module GhcCompat
   ( plugin,
 
     -- * exported purely for documentation
@@ -37,10 +37,10 @@ import safe "base" System.Exit (die)
 import safe "base" System.IO (IO, putStr)
 import safe "base" Text.Show (show)
 import safe "ghc-boot-th" GHC.LanguageExtensions.Type (Extension)
-import safe "this" GhcCompat.Supported.GhcRelease (GhcRelease)
-import safe qualified "this" GhcCompat.Supported.GhcRelease as GhcRelease
-import safe "this" GhcCompat.Supported.Opts (Opts)
-import safe qualified "this" GhcCompat.Supported.Opts as Opts
+import safe "this" GhcCompat.GhcRelease (GhcRelease)
+import safe qualified "this" GhcCompat.GhcRelease as GhcRelease
+import safe "this" GhcCompat.Opts (Opts)
+import safe qualified "this" GhcCompat.Opts as Opts
 #if MIN_VERSION_ghc(9, 0, 0)
 import "ghc" GHC.Plugins (Plugin, defaultPlugin)
 import qualified "ghc" GHC.Plugins as Plugins
@@ -121,7 +121,8 @@ identifyProblematicFlags minVersion dflags =
 --            these warnings (including using `-fno-warn-` for flags added
 --            before GHC 8.0).
 formatFlag :: Plugins.WarningFlag -> String
-formatFlag = ("-W" <>) . List.intercalate "-" . splitWords [] . List.drop 8 . show
+formatFlag =
+  ("-W" <>) . List.intercalate "-" . splitWords [] . List.drop 8 . show
   where
     splitWords :: [String] -> String -> [String]
     splitWords acc =

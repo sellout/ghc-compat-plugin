@@ -1,8 +1,6 @@
 {-# LANGUAGE Safe #-}
 
--- | The implementation of the plugin, but this module is only loaded on
---   GHC 7.10+.
-module GhcCompat.Supported.Opts
+module GhcCompat.Opts
   ( Opts,
     ReportLevel (Error, Warn),
     minVersion,

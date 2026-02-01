@@ -73,12 +73,29 @@ flag noisy-deprecations
 
 library
   default-language: Haskell98
-  hs-source-dirs:
-    src
   build-depends:
     base >=4.8.0 && <4.23,
     ghc >=7.10.3 && <9.16,
     ghc-boot-th >=7.10.3 && <9.16
+  exposed-modules:
+    GhcCompat
+  if impl(ghc >=8.0.1)
+    hs-source-dirs:
+      supported
+    default-extensions:
+      -- 6.8.1
+      NoImplicitPrelude
+      -- 6.10.1
+      NamedFieldPuns
+      PackageImports
+      -- 7.6.1
+      LambdaCase
+    other-modules:
+      GhcCompat.GhcRelease
+      GhcCompat.Opts
+  else
+    hs-source-dirs:
+      unsupported
   if impl(ghc >= 8.0.1)
     ghc-options:
       -Weverything
@@ -99,24 +116,6 @@ library
   if flag(noisy-deprecations)
     cpp-options:
       -DSELLOUT_NOISY_DEPRECATIONS
-  exposed-modules:
-    GhcCompat
-  if impl(ghc >= 7.10.1)
-    default-extensions:
-      -- 6.8.1
-      NoImplicitPrelude
-      -- 6.10.1
-      NamedFieldPuns
-      PackageImports
-      -- 7.6.1
-      LambdaCase
-    other-modules:
-      GhcCompat.Supported
-      GhcCompat.Supported.GhcRelease
-      GhcCompat.Supported.Opts
-  else
-    other-modules:
-      GhcCompat.Unsupported
   -- THIS PLUGIN WILL INFORM YOU AS TO WHETHER YOU NEED THE FOLLOWING
   -- CONDITIONALS IN YOUR OWN CABAL FILES.
   if impl(ghc >= 7.10.1)
