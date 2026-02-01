@@ -17,21 +17,12 @@
 --            @-Weverything@ then, or manually enable all warnings on older
 --            GHCs.
 --
---          - Warn if extensions that were added after the min version are being
---            used.
---
 --          - Add opts to control each extensions and option. This is because
 --            they may be used only in code that is already conditionalized on
 --            the compiler version, and so are safe to ignore.
 --
 --          - Warn if the current compiler is older than the min version
 --            provided.
---
---          - Make this a NOP plugin when the current GHC is older than we
---            support. This allows users to use it across older versions without
---            them having to conditionally depend on the plugin. The way to do
---            this is to move the code to a different module and conditionalize
---            the import, rather than wrapping all the code in CPP.
 module GhcCompat
   ( module Implementation,
   )
