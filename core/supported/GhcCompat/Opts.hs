@@ -1,5 +1,10 @@
 {-# LANGUAGE Safe #-}
 
+-- |
+-- Copyright: 2026 Greg Pfeil
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+--
+-- Option handling for "GhcCompat".
 module GhcCompat.Opts
   ( Opts,
     ReportLevel (Error, Warn),
@@ -17,13 +22,12 @@ import "base" Data.Eq (Eq, (==))
 import "base" Data.Foldable (foldrM)
 import "base" Data.Function (flip, ($))
 import "base" Data.Functor (fmap, (<$>))
-import "base" Data.List (break, drop, lookup)
-import "base" Data.List.NonEmpty (last, nonEmpty)
+import "base" Data.List (break, drop, lookup, reverse, uncons)
 import "base" Data.Maybe (Maybe (Nothing), maybe)
+import "base" Data.Monoid ((<>))
 import "base" Data.Ord (Ord)
-import "base" Data.Semigroup ((<>))
 import "base" Data.String (String)
-import "base" Data.Tuple (curry, fst, uncurry)
+import "base" Data.Tuple (fst, uncurry)
 import "base" Data.Version (Version, parseVersion)
 import "base" Text.ParserCombinators.ReadP (readP_to_S)
 import "base" Text.Read (Read)
@@ -40,7 +44,7 @@ defaultOpts minVersion =
   Opts {minVersion, reportIncompatibleExtensions = pure Warn}
 
 readVersion :: String -> Maybe Version
-readVersion = fmap (fst . last) . nonEmpty . readP_to_S parseVersion
+readVersion = fmap (fst . fst) . uncons . reverse . readP_to_S parseVersion
 
 -- | Options support by the plugin. These can be specified with the
 --   [@-fplugin-opt@](https://downloads.haskell.org/ghc/latest/docs/users_guide/extending_ghc.html#ghc-flag-fplugin-opt-module-args)
@@ -57,22 +61,21 @@ data Opts = Opts
   deriving (Eq, Ord, Read, Show)
 
 parseOpt :: Opts -> String -> String -> Either String Opts
-parseOpt opts =
-  curry $ \case
-    ("minVersion", _) -> pure opts
-    ("reportIncompatibleExtensions", level) ->
-      (\v -> opts {reportIncompatibleExtensions = v}) <$> case level of
-        "no" -> pure Nothing
-        "warn" -> pure $ pure Warn
-        "error" -> pure $ pure Error
-        _ ->
-          Left $
-            "Unknown reporting level ‘"
-              <> level
-              <> "’ (options are ‘no’, ‘warn’, and ‘error’)."
-    (k, v) ->
-      Left $
-        "Received unknown plugin-opt ‘" <> k <> "’ with value ‘" <> v <> "’."
+parseOpt opts name value = case (name, value) of
+  ("minVersion", _) -> pure opts
+  ("reportIncompatibleExtensions", level) ->
+    (\v -> opts {reportIncompatibleExtensions = v}) <$> case level of
+      "no" -> pure Nothing
+      "warn" -> pure $ pure Warn
+      "error" -> pure $ pure Error
+      _ ->
+        Left $
+          "Unknown reporting level ‘"
+            <> level
+            <> "’ (options are ‘no’, ‘warn’, and ‘error’)."
+  (k, v) ->
+    Left $
+      "Received unknown plugin-opt ‘" <> k <> "’ with value ‘" <> v <> "’."
 
 parse :: [String] -> Either String Opts
 parse optStrs =

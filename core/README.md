@@ -41,10 +41,10 @@ Add the following to any stanzas[^2] in your Cabal package files.
 
 ```cabal
 library
-  build-depends: ghc-compat-plugin ^>= {0.0.1},
+  build-depends: ghc-compat-plugin >=0.0.1 && <0.1,
   ghc-options:
-    -fplugin GhcCompat
-    -fplugin-opt GhcCompat:minVersion=8.8.1
+    -fplugin=GhcCompat
+    -fplugin-opt=GhcCompat:minVersion=8.8.1
 ```
 
 Note that in the last line, you must provide the oldest GHC version you support to the plugin, so it knows which flags to disable.
@@ -57,7 +57,16 @@ You can also add
 
 (where `error` can also be `warn` (the default) or `no`) in order to control how the plugin informs you of enabled extensions that aren’t compatible with all of your supported GHC versions.
 
-**NB**: This plugin is intended to compile with any GHC you happen to have around[^3], but it currently won’t _do_ anything before GHC 7.10.1. That is, you can add this plugin to your Cabal file unconditionally, but unless you’re building or testing on a GHC at least as recent as 7.10, it won’t help you.
+**NB**: This plugin should load from GHC 7.2 (the first version of GHC to support plugins[^3]). However, it currently won’t _do_ anything before GHC 7.10.1. If you do need to support a GHC prior to 7.2, you can use the plugin conditionally, like
+
+```cabal
+library
+  if impl(ghc >= 7.2.1)
+    build-depends: ghc-compat-plugin >=0.0.1 && <0.1,
+    ghc-options:
+      -fplugin=GhcCompat
+      -fplugin-opt=GhcCompat:minVersion=6.8.1
+```
 
 [^3]: What good would a compatibility plugin be if it wasn’t extremely compatible?
 

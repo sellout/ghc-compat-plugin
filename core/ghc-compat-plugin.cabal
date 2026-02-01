@@ -1,5 +1,6 @@
-cabal-version: 1.20
--- ^ 1.20 is the first format to support `license-files`.
+cabal-version: 1.12
+-- ^ 1.12 is the version included with GHC 7.2.1, the oldest version that
+--   supports plugins.
 --
 -- https://cabal.readthedocs.io/en/stable/file-format-changelog.html
 
@@ -16,14 +17,10 @@ copyright: 2026 Greg Pfeil
 -- `Universal-FOSS-exception-1.0` SPDX license exception. Since it only makes
 -- the license more lax, we just omit it from this field.
 license: AGPL-3
-license-files:
-  LICENSE
-  LICENSE.AGPL-3.0-only
-  LICENSE.Universal-FOSS-exception-1.0
-  LICENSE.commercial
+license-file: LICENSE.AGPL-3.0-only
 category: Compatibility, Compiler Plugins
 build-type: Simple
-extra-doc-files:
+extra-source-files:
   CHANGELOG.md
   README.md
   docs/*.md
@@ -74,22 +71,25 @@ flag noisy-deprecations
 library
   default-language: Haskell98
   build-depends:
-    base >=4.8.0 && <4.23,
-    ghc >=7.10.3 && <9.16,
-    ghc-boot-th >=7.10.3 && <9.16
+    ghc >=7.2.1 && <9.16
+  default-extensions:
+    -- 6.8.1
+    NoImplicitPrelude
+    -- 6.10.1
+    NamedFieldPuns
+    PackageImports
   exposed-modules:
     GhcCompat
-  if impl(ghc >=8.0.1)
+  -- blockers for supporting GHC <7.10:
+  -- - use of `MIN_VERSION_GLASGOW_HASKELL`
+  if impl(ghc >= 7.10.1)
+    build-depends:
+      base >=4.8.0 && <4.23
+    if impl(ghc >= 8.0.1)
+      build-depends:
+        ghc-boot-th >=8.0.1 && <9.16
     hs-source-dirs:
       supported
-    default-extensions:
-      -- 6.8.1
-      NoImplicitPrelude
-      -- 6.10.1
-      NamedFieldPuns
-      PackageImports
-      -- 7.6.1
-      LambdaCase
     other-modules:
       GhcCompat.GhcRelease
       GhcCompat.Opts

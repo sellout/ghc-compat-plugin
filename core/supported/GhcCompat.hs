@@ -5,8 +5,12 @@
 -- GHC 6.10
 {-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
 
--- | The implementation of the plugin, but this module is only loaded on
---   GHC 8.0+ currently.
+-- |
+-- Copyright: 2026 Greg Pfeil
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+--
+-- The implementation of the plugin, but this module is only loaded on GHC 7.10+
+-- currently.
 module GhcCompat
   ( plugin,
 
@@ -25,18 +29,15 @@ import safe qualified "base" Data.Foldable as Foldable
 import safe "base" Data.Function (flip, ($))
 import safe "base" Data.Functor (fmap, (<$>))
 import safe qualified "base" Data.List as List
-import safe "base" Data.List.NonEmpty (NonEmpty ((:|)), nonEmpty)
 import safe "base" Data.Maybe (maybe)
-import safe "base" Data.Monoid (mconcat)
+import safe "base" Data.Monoid (mconcat, (<>))
 import safe "base" Data.Ord ((<))
-import safe "base" Data.Semigroup (sconcat, (<>))
 import safe "base" Data.String (String)
 import safe "base" Data.Tuple (uncurry)
 import safe "base" Data.Version (Version, showVersion)
 import safe "base" System.Exit (die)
 import safe "base" System.IO (IO, putStr)
 import safe "base" Text.Show (show)
-import safe "ghc-boot-th" GHC.LanguageExtensions.Type (Extension)
 import safe "this" GhcCompat.GhcRelease (GhcRelease)
 import safe qualified "this" GhcCompat.GhcRelease as GhcRelease
 import safe "this" GhcCompat.Opts (Opts)
@@ -128,11 +129,11 @@ formatFlag =
     splitWords acc =
       maybe
         acc
-        ( \(h :| t) ->
+        ( \(h, t) ->
             uncurry splitWords . first ((acc <>) . pure . (toLower h :)) $
               List.break isUpper t
         )
-        . nonEmpty
+        . List.uncons
 
 warnFlags :: [Plugins.CommandLineOption] -> Opts -> Plugins.DynFlags -> IO ()
 warnFlags optStrs opts dflags =
@@ -152,10 +153,11 @@ warnFlags optStrs opts dflags =
                       )
                         <>
                     )
-                  . sconcat
+                  . mconcat
                   . fmap (\flag -> "  • " <> formatFlag flag <> "\n")
+                  . uncurry (:)
               )
-              . nonEmpty
+              . List.uncons
               $ identifyProblematicFlags minVer dflags
         )
         $ Opts.reportIncompatibleExtensions opts
@@ -178,13 +180,14 @@ warnExts optStrs opts dflags =
                       )
                         <>
                     )
-                  . sconcat
+                  . mconcat
                   -- FIXME: Most extensions have the same constructor name as
                   --        the extension name, but not all of them, so `show`
                   --        doesn’t always do the right thing.
                   . fmap (\ext -> "  • " <> show ext <> "\n")
+                  . uncurry (:)
               )
-              . nonEmpty
+              . List.uncons
               $ usedIncompatibleExtensions minVer dflags
         )
         $ Opts.reportIncompatibleExtensions opts
@@ -217,14 +220,15 @@ errorPrelude optStrs prefix =
 --          - `Extension.ParallelArrays`,
 --          - `Extension.RelaxedLayout`, and
 --          - `Extension.RelaxedPolyRec`.
-usedIncompatibleExtensions :: Version -> Plugins.DynFlags -> [Extension]
+usedIncompatibleExtensions ::
+  Version -> Plugins.DynFlags -> [GhcRelease.Extension]
 #if MIN_VERSION_ghc(9, 6, 1)
 usedIncompatibleExtensions minVersion =
   List.intersect (incompatibleExtensions minVersion)
     . fmap removeSwitch
     . Plugins.extensions
   where
-    removeSwitch = \case
+    removeSwitch onOff = case onOff of
       Plugins.Off a -> a
       Plugins.On a -> a
 #else
@@ -233,7 +237,7 @@ usedIncompatibleExtensions minVersion dflags =
 #endif
 
 -- | A list of /all/ extensions that are incompatible with the provided version.
-incompatibleExtensions :: Version -> [Extension]
+incompatibleExtensions :: Version -> [GhcRelease.Extension]
 incompatibleExtensions minVersion =
   ( \ghc ->
       if minVersion < GhcRelease.version ghc
