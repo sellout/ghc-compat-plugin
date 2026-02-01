@@ -1,4 +1,6 @@
-cabal-version: 2.0
+cabal-version: 1.20
+-- ^ 1.20 is the first format to support `license-files`.
+--
 -- https://cabal.readthedocs.io/en/stable/file-format-changelog.html
 
 name: ghc-compat-plugin
@@ -20,13 +22,15 @@ license-files:
   LICENSE.Universal-FOSS-exception-1.0
   LICENSE.commercial
 category: Compatibility, Compiler Plugins
-build-type: Custom
+build-type: Simple
 extra-doc-files:
   CHANGELOG.md
   README.md
   docs/*.md
 tested-with:
-  GHC ==8.2.2
+  GHC ==7.10.3
+  || ==8.0.2
+  || ==8.2.2
   || ==8.4.1
   || ==8.6.1
   || ==8.8.1
@@ -55,20 +59,6 @@ source-repository this
   -- NB: This is the repo version, which is distinct from the package version.
   tag: v0.1.0
 
-custom-setup
-  setup-depends:
-    -- TODO: Due to haskell/cabal#3751, `Cabal` has to be specified even though
-    --       there’s no direct dependency. Its lower bound needs to be at least
-    --       as high as `cabal-version` at the top of this file, and Hackage
-    --       requires it to have _some_ upper bound. (Since there’s no direct
-    --       dependency, it doesn’t use PVP bounds.)
-    --
-    -- NB: This file parses fine with the Cabal 2.2 format, but the actual
-    --     library fails to handle the license field before 2.4.
-    Cabal >=2.0 && < 99,
-    base ^>=4.10.1 || ^>=4.11.0 || ^>=4.12.0 || ^>=4.13.0 || ^>=4.14.0 || ^>=4.15.0 || ^>=4.16.0 || ^>=4.17.0 || ^>=4.18.0 || ^>=4.19.0 || ^>=4.20.0 || ^>=4.21.0 || ^>=4.22.0,
-    cabal-doctest ^>=1.0.0
-
 flag noisy-deprecations
   description:
     Prior to GHC 9.10, the @DEPRECATED@ pragma can’t distinguish between terms
@@ -86,9 +76,9 @@ library
   hs-source-dirs:
     src
   build-depends:
-    base ^>=4.10.1 || ^>=4.11.0 || ^>=4.12.0 || ^>=4.13.0 || ^>=4.14.0 || ^>=4.15.0 || ^>=4.16.0 || ^>=4.17.0 || ^>=4.18.0 || ^>=4.19.0 || ^>=4.20.0 || ^>=4.21.0 || ^>=4.22.0,
-    ghc ^>=8.2.2 || ^>=8.4.1 || ^>=8.6.1 || ^>=8.8.1 || ^>=8.10.1 || ^>=9.0.1 || ^>=9.2.1 || ^>=9.4.1 || ^>=9.6.1 || ^>=9.8.1 || ^>=9.10.1 || ^>=9.12.1 || ^>=9.14.1,
-    ghc-boot-th ^>=8.2.2 || ^>=8.4.1 || ^>=8.6.1 || ^>=8.8.1 || ^>=8.10.1 || ^>=9.0.1 || ^>=9.2.1 || ^>=9.4.1 || ^>=9.6.1 || ^>=9.8.1 || ^>=9.10.1 || ^>=9.12.1 || ^>=9.14.1
+    base >=4.8.0 && <4.23,
+    ghc >=7.10.3 && <9.16,
+    ghc-boot-th >=7.10.3 && <9.16
   if impl(ghc >= 8.0.1)
     ghc-options:
       -Weverything
@@ -151,53 +141,3 @@ library
   else
     other-modules:
       GhcCompat.Unsupported
-
-test-suite doctests
-  default-language: Haskell98
-  type: exitcode-stdio-1.0
-  hs-source-dirs:
-    tests
-  main-is: doctests.hs
-  build-depends:
-    base ^>=4.10.1 || ^>=4.11.0 || ^>=4.12.0 || ^>=4.13.0 || ^>=4.14.0 || ^>=4.15.0 || ^>=4.16.0 || ^>=4.17.0 || ^>=4.18.0 || ^>=4.19.0 || ^>=4.20.0 || ^>=4.21.0 || ^>=4.22.0,
-    doctest ^>=0.14.0 || ^>=0.16.0 || ^>=0.18.1 || ^>=0.20.1 || ^>=0.21.1 || ^>=0.22.2 || ^>=0.24.0,
-    ghc-compat-plugin
-  other-modules:
-    Build_doctests
-  -- TODO: The sections below here are necessary because we don’t have control
-  --       over the generated `Build_doctests.hs` file. So we have to silence
-  --       all of its warnings one way or another.
-  if impl(ghc >= 8.0.1)
-    ghc-options:
-      -Weverything
-      -Wno-missing-import-lists
-      -Wno-safe
-      -Wno-unsafe
-  else
-    ghc-options:
-      -Wall
-      -fno-warn-missing-import-lists
-  if impl(ghc >= 8.4.1)
-    ghc-options:
-      -Wno-missing-export-lists
-  if impl(ghc >= 8.8.1)
-    ghc-options:
-      -Wno-missing-deriving-strategies
-  if impl(ghc >= 8.10.1)
-    ghc-options:
-      -- `doctest` requires the package containing the doctests as a dependency
-      -- to ensure it gets built before this test-suite, even though the package
-      -- appears to be unused.
-      -Wno-unused-packages
-  if impl(ghc >= 9.2.1)
-    ghc-options:
-      -Wno-missing-kind-signatures
-  default-extensions:
-    -- 6.8.1
-    NoImplicitPrelude
-    -- 6.10.1
-    PackageImports
-    -- Since we can’t add `{-# LANGUAGE Safe -#}` to the generated
-    -- “Build_doctests.hs”, we set it here, and that means it has to match
-    -- doctests.hs, which is `Unsafe`.
-    Unsafe
