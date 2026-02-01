@@ -3,7 +3,7 @@
 -- GHC 7.2.1
 {-# LANGUAGE Trustworthy #-}
 -- GHC 6.10
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
 
 -- | The implementation of the plugin, but this module is only loaded on
 --   GHC 7.10+.
@@ -114,8 +114,12 @@ identifyProblematicFlags minVersion dflags =
 
 -- | Try to print a flag the way it looks to a user.
 --
--- __FIXME__: `show` on flags doesn’t display them nicely, but I don’t see
---            another way to print them.
+--  __FIXME__: `show` on flags doesn’t display them nicely, but I don’t see
+--             another way to print them.
+--
+--  __TODO__: Print out what the user should add to their Cabal file to avoid
+--            these warnings (including using `-fno-warn-` for flags added
+--            before GHC 8.0).
 formatFlag :: Plugins.WarningFlag -> String
 formatFlag = ("-W" <>) . List.intercalate "-" . splitWords [] . List.drop 8 . show
   where

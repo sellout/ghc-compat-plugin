@@ -3,7 +3,7 @@
 -- GHC 7.2.1
 {-# LANGUAGE Trustworthy #-}
 -- GHC 6.10
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -fno-warn-unrecognised-pragmas #-}
 
 -- | The implementation of the plugin, but this module is only loaded on
 --   GHC 7.10+.

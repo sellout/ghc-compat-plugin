@@ -96,30 +96,6 @@ library
   else
     ghc-options:
       -Wall
-  -- remove if the oldest supported version is GHC 8.2.1+
-  if impl(ghc >= 8.8.1)
-    ghc-options:
-      -Wno-missing-deriving-strategies
-  -- remove if the oldest supported version is GHC 8.10.1+
-  if impl(ghc >= 8.10.1)
-    ghc-options:
-      -Wno-prepositive-qualified-module
-  -- remove if the oldest supported version is GHC 9.2.1+
-  if impl(ghc >= 9.2.1)
-    ghc-options:
-      -Wno-missing-kind-signatures
-  if impl(ghc >= 9.8.1)
-    ghc-options:
-      -- remove if the oldest supported version is GHC 9.2.1+
-      -Wno-missing-poly-kind-signatures
-      -- Inference good.
-      -Wno-missing-role-annotations
-  -- remove if the oldest supported version is GHC 9.14.1+
-  if impl(ghc >= 9.14.1)
-    ghc-options:
-      -- See
-      -- https://github.com/ghc-proposals/ghc-proposals/blob/master/proposals/0581-namespace-specified-imports.rst#deprecate-use-of-pattern-in-import-export-lists
-      -Wno-pattern-namespace-specifier
   if flag(noisy-deprecations)
     cpp-options:
       -DSELLOUT_NOISY_DEPRECATIONS
@@ -141,3 +117,37 @@ library
   else
     other-modules:
       GhcCompat.Unsupported
+  -- THIS PLUGIN WILL INFORM YOU AS TO WHETHER YOU NEED THE FOLLOWING
+  -- CONDITIONALS IN YOUR OWN CABAL FILES.
+  if impl(ghc >= 7.10.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 7.8.1+
+      -fno-warn-deriving-typeable
+  if impl(ghc >= 8.6.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 8.6.1+
+      -Wno-star-is-type
+  if impl(ghc >= 8.8.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 8.2.1+
+      -Wno-missing-deriving-strategies
+  -- THIS PLUGIN ELIMINATES THE NEED FOR THE FOLLOWING CONDITIONALS IN YOUR OWN
+  -- CABAL FILES.
+  if impl(ghc >= 8.10.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 8.10.1+
+      -Wno-prepositive-qualified-module
+  if impl(ghc >= 9.2.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 6.8.1+
+      -Wno-missing-kind-signatures
+  if impl(ghc >= 9.8.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 7.4.1+
+      -Wno-missing-poly-kind-signatures
+      -- remove if the oldest supported version is GHC 7.8.1+
+      -Wno-missing-role-annotations
+  if impl(ghc >= 9.14.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 9.14.1+
+      -Wno-pattern-namespace-specifier
