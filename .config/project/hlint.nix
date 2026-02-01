@@ -113,15 +113,7 @@
     {
       group = {
         name = "generalize";
-        imports = ["package traversable"];
         rules = [
-          {
-            hint = {
-              lhs = "maybe (pure ())";
-              rhs = "traverse_";
-              note = "IncreasesLaziness";
-            };
-          }
           {
             warn = {
               lhs = "mappend";
