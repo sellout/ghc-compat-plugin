@@ -6,7 +6,7 @@
 --
 -- Option handling for "GhcCompat".
 module GhcCompat.Opts
-  ( Opts,
+  ( Opts (Opts),
     ReportLevel (Error, Warn),
     minVersion,
     parse,
@@ -18,26 +18,22 @@ import "base" Control.Applicative (pure)
 import "base" Control.Category ((.))
 import "base" Data.Bifunctor (second)
 import "base" Data.Either (Either (Left))
-import "base" Data.Eq (Eq, (==))
+import "base" Data.Eq ((==))
 import "base" Data.Foldable (foldrM)
 import "base" Data.Function (flip, ($))
 import "base" Data.Functor (fmap, (<$>))
 import "base" Data.List (break, drop, lookup, reverse, uncons)
 import "base" Data.Maybe (Maybe (Nothing), maybe)
 import "base" Data.Monoid ((<>))
-import "base" Data.Ord (Ord)
 import "base" Data.String (String)
 import "base" Data.Tuple (fst, uncurry)
 import "base" Data.Version (Version, parseVersion)
 import "base" Text.ParserCombinators.ReadP (readP_to_S)
-import "base" Text.Read (Read)
-import "base" Text.Show (Show)
 
 -- | This mirrors the levels provided by GHC’s warning flags. Correspondingly,
 --   we use the lowercase forms for the plugin opts instead of the capitalized
 --   ones.
 data ReportLevel = Warn | Error
-  deriving (Eq, Ord, Read, Show)
 
 defaultOpts :: Version -> Opts
 defaultOpts minVersion =
@@ -58,7 +54,6 @@ data Opts = Opts
     -- | This can be “no”, “warn” (the default), or “error”.
     reportIncompatibleExtensions :: Maybe ReportLevel
   }
-  deriving (Eq, Ord, Read, Show)
 
 parseOpt :: Opts -> String -> String -> Either String Opts
 parseOpt opts name value = case (name, value) of
