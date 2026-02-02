@@ -111,7 +111,7 @@ install optStrs todos = do
 --   extensions.
 identifyProblematicFlags :: Version -> Plugins.DynFlags -> [Plugins.WarningFlag]
 identifyProblematicFlags minVersion dflags =
-  List.filter (flip Plugins.wopt dflags) . warningFlags minVersion $
+  List.filter (`Plugins.wopt` dflags) . warningFlags minVersion $
     List.filter
       ((< GhcRelease.version GhcRelease.ghc_8_10_1) . GhcRelease.version)
       GhcRelease.all
@@ -236,7 +236,7 @@ usedIncompatibleExtensions minVersion =
       Plugins.On a -> a
 #else
 usedIncompatibleExtensions minVersion dflags =
-  List.filter (flip Plugins.xopt dflags) $ incompatibleExtensions minVersion
+  List.filter (`Plugins.xopt` dflags) $ incompatibleExtensions minVersion
 #endif
 
 -- | A list of /all/ extensions that are incompatible with the provided version.

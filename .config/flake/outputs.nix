@@ -102,15 +102,20 @@ in
       ## one via GitHub workflow. Additionally, check any revisions that have
       ## explicit conditionalization. And check whatever version `pkgs.ghc`
       ## maps to in the nixpkgs we depend on.
-      testedGhcVersions = system: [
-        self.lib.defaultGhcVersion
-        "9.4.8"
-        "9.6.7"
-        "9.8.4"
-        "9.10.2"
-        "9.12.2"
-        # "ghcHEAD" # doctest doesn’t work on current HEAD
-      ];
+      testedGhcVersions = system:
+        [
+          self.lib.defaultGhcVersion
+          "9.4.8"
+          "9.6.7"
+          "9.8.4"
+          "9.10.2"
+        ]
+        # GHC 9.12 fails to build on i686-linux under Nix.
+        ++ nixpkgs.lib.optional (system != "i686-linux") "9.12.2"
+        ## This is a little hack to only build it on Nix CI, where we don’t
+        ## require builds to succeed. Doing this on Garnix would break “All
+        ## Garnix checks”.
+        ++ nixpkgs.lib.optional (system == "x86_64-linux") "HEAD";
 
       ## The versions that are older than those supported by Nix that we
       ## prefer to test against.
