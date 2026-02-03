@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- https://cabal.readthedocs.io/en/stable/file-format-changelog.html
 
 name: ghc-compat-plugin
-version: 0.0.1.0
+version: 0.0.2.0
 synopsis: Eases support for multiple GHC versions
 description: Controls various GHC options and extensions to make compilation
              across multiple versions easier, and to alert you to
@@ -54,7 +54,7 @@ source-repository this
   location: https://github.com/sellout/ghc-compat-plugin.git
   subdir: core
   -- NB: This is the repo version, which is distinct from the package version.
-  tag: v0.1.0
+  tag: v0.2.0
 
 flag noisy-deprecations
   description:
