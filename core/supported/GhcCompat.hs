@@ -13,9 +13,9 @@
 -- currently.
 module GhcCompat
   ( plugin,
-
-    -- * exported purely for documentation
-    Opts,
+    -- exported purely for documentation
+    Opts (..),
+    ReportLevel (..),
   )
 where
 
@@ -40,7 +40,7 @@ import safe "base" System.IO (IO, putStr)
 import safe "base" Text.Show (show)
 import safe "this" GhcCompat.GhcRelease (GhcRelease)
 import safe qualified "this" GhcCompat.GhcRelease as GhcRelease
-import safe "this" GhcCompat.Opts (Opts)
+import safe "this" GhcCompat.Opts (Opts (Opts), ReportLevel (Error, Warn))
 import safe qualified "this" GhcCompat.Opts as Opts
 #if MIN_VERSION_ghc(9, 0, 0)
 import "ghc" GHC.Plugins (Plugin, defaultPlugin)
@@ -50,6 +50,9 @@ import "ghc" GhcPlugins (Plugin, defaultPlugin)
 import qualified "ghc" GhcPlugins as Plugins
 #endif
 
+-- | The entry-point for the GHC plugin. This is used by passing
+--   [@-fplugin=GhcCompat@](https://downloads.haskell.org/ghc/latest/docs/users_guide/extending_ghc.html#ghc-flag-fplugin-module)
+--   to GHC.
 plugin :: Plugin
 plugin =
   defaultPlugin
@@ -108,7 +111,7 @@ install optStrs todos = do
 --   extensions.
 identifyProblematicFlags :: Version -> Plugins.DynFlags -> [Plugins.WarningFlag]
 identifyProblematicFlags minVersion dflags =
-  List.filter (flip Plugins.wopt dflags) . warningFlags minVersion $
+  List.filter (`Plugins.wopt` dflags) . warningFlags minVersion $
     List.filter
       ((< GhcRelease.version GhcRelease.ghc_8_10_1) . GhcRelease.version)
       GhcRelease.all
@@ -233,7 +236,7 @@ usedIncompatibleExtensions minVersion =
       Plugins.On a -> a
 #else
 usedIncompatibleExtensions minVersion dflags =
-  List.filter (flip Plugins.xopt dflags) $ incompatibleExtensions minVersion
+  List.filter (`Plugins.xopt` dflags) $ incompatibleExtensions minVersion
 #endif
 
 -- | A list of /all/ extensions that are incompatible with the provided version.

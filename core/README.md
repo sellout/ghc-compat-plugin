@@ -1,6 +1,6 @@
 # `GhcCompat` plugin
 
-[![Hackage Version](https://img.shields.io/hackage/v/ghc-compat-plugin)](https://hackage.haskell.org/package/)
+[![Hackage Version](https://img.shields.io/hackage/v/ghc-compat-plugin)](https://hackage.haskell.org/package/ghc-compat-plugin)
 [![Packaging status](https://repology.org/badge/tiny-repos/haskell:ghc-compat-plugin.svg)](https://repology.org/project/haskell:ghc-compat-plugin/versions)
 [![latest packaged versions](https://repology.org/badge/latest-versions/haskell:ghc-compat-plugin.svg)](https://repology.org/project/haskell:ghc-compat-plugin/versions)
 
@@ -37,11 +37,10 @@ Note that there are often versions between the oldest one you support and the on
 
 Add the following to any stanzas[^2] in your Cabal package files.
 
-[^2]: I like to put it in a `common` section that’s imported by all my stanzas.
+[^2]: I like to put it in a `common` section (provided you’re using at least Cabal 2.2) that’s imported by all my stanzas.
 
 ```cabal
-library
-  build-depends: ghc-compat-plugin >=0.0.1 && <0.1,
+  build-depends: ghc-compat-plugin >=0.0.1 && <0.1
   ghc-options:
     -fplugin=GhcCompat
     -fplugin-opt=GhcCompat:minVersion=8.8.1
@@ -52,7 +51,7 @@ Note that in the last line, you must provide the oldest GHC version you support 
 You can also add
 
 ```cabal
-    -fplugin-opt GhcCompat:reportIncompatibleExtensions=error
+    -fplugin-opt=GhcCompat:reportIncompatibleExtensions=error
 ```
 
 (where `error` can also be `warn` (the default) or `no`) in order to control how the plugin informs you of enabled extensions that aren’t compatible with all of your supported GHC versions.
@@ -60,9 +59,8 @@ You can also add
 **NB**: This plugin should load from GHC 7.2 (the first version of GHC to support plugins[^3]). However, it currently won’t _do_ anything before GHC 7.10.1. If you do need to support a GHC prior to 7.2, you can use the plugin conditionally, like
 
 ```cabal
-library
   if impl(ghc >= 7.2.1)
-    build-depends: ghc-compat-plugin >=0.0.1 && <0.1,
+    build-depends: ghc-compat-plugin >=0.0.1 && <0.1
     ghc-options:
       -fplugin=GhcCompat
       -fplugin-opt=GhcCompat:minVersion=6.8.1
