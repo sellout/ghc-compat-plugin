@@ -38,7 +38,6 @@ module GhcCompat.GhcRelease
     ghc_9_0_1,
     ghc_9_2_1,
     ghc_9_2_4,
-    ghc_9_4_1,
     ghc_9_6_1,
     ghc_9_8_1,
     ghc_9_10_1,
@@ -204,7 +203,14 @@ ghc_6_10_1 =
         [ Extension.PackageImports,
           Extension.QuasiQuotes,
           Extension.TransformListComp,
-          Extension.ViewPatterns
+          Extension.ViewPatterns,
+-- NB: `NamedFieldPuns` is documented as being added in 6.10.1, but it was
+--     called `RecordPuns` in `Extension` until 9.4.1.
+#if MIN_VERSION_GLASGOW_HASKELL(9, 4, 1, 0)
+          Extension.NamedFieldPuns
+#else
+          Extension.RecordPuns
+#endif
         ],
       newWarnings = []
     }
@@ -212,6 +218,7 @@ ghc_6_10_1 =
     { newExtensions =
         [ Extension.Opt_PackageImports,
           Extension.Opt_QuasiQuotes,
+          Extension.Opt_RecordPuns,
           Extension.Opt_TransformListComp,
           Extension.Opt_ViewPatterns
         ],
@@ -557,17 +564,6 @@ ghc_9_6_1 =
     }
 #endif
 
-ghc_9_4_1 :: GhcRelease
-ghc_9_4_1 =
-  (ghcRelease [9, 4, 1])
-#if MIN_VERSION_GLASGOW_HASKELL(9, 4, 1, 0)
-    { -- NB: `NamedFieldPuns` is documented as being added in 6.10.1, but
-      --     doesn’t appear in `Extension` until 9.4.1.
-      newExtensions = [Extension.NamedFieldPuns],
-      newWarnings = []
-    }
-#endif
-
 ghc_9_8_1 :: GhcRelease
 ghc_9_8_1 =
   (ghcRelease [9, 8, 1])
@@ -642,7 +638,6 @@ all =
     ghc_9_0_1,
     ghc_9_2_1,
     ghc_9_2_4,
-    ghc_9_4_1,
     ghc_9_6_1,
     ghc_9_8_1,
     ghc_9_10_1,
