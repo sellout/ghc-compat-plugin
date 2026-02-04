@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Safe #-}
 
 -- |
@@ -8,6 +9,7 @@
 module GhcCompat.Opts
   ( Opts (Opts),
     ReportLevel (Error, Warn),
+    correctOptionOrder,
     minVersion,
     parse,
     reportIncompatibleExtensions,
@@ -30,6 +32,16 @@ import "base" Data.String (String)
 import "base" Data.Tuple (fst, uncurry)
 import "base" Data.Version (Version, parseVersion)
 import "base" Text.ParserCombinators.ReadP (readP_to_S)
+
+-- | `-fplugin-opt`s are provided to the plugin in reverse order before GHC 8.6.
+--   This ensures the plugin always receives then in the order they were
+--   provided on the command line.
+correctOptionOrder :: [String] -> [String]
+#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 0, 0)
+correctOptionOrder x = x
+#else
+correctOptionOrder = reverse
+#endif
 
 -- | This mirrors the levels provided by GHC’s warning flags. Correspondingly,
 --   we use the lowercase forms for the plugin opts instead of the capitalized

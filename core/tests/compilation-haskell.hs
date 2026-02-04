@@ -28,7 +28,7 @@ import qualified Test.Min_7_10_1
 #if MIN_VERSION_GLASGOW_HASKELL(8, 0, 1, 0)
 import qualified Test.Min_8_0_1
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(8, 0, 1, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 2, 1, 0)
 import qualified Test.Min_8_2_1
 #endif
 #if MIN_VERSION_GLASGOW_HASKELL(8, 4, 0, 0)

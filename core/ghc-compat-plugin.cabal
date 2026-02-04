@@ -76,6 +76,7 @@ library
   default-extensions:
     -- 6.8.1
     NoImplicitPrelude
+    NoMonomorphismRestriction
     -- 6.10.1
     NamedFieldPuns
     PackageImports
