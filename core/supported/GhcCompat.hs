@@ -21,27 +21,36 @@ where
 
 import safe "base" Control.Applicative (pure)
 import safe "base" Control.Category ((.))
-import safe "base" Control.Monad ((=<<))
+import safe "base" Control.Monad ((<=<), (=<<))
 import safe "base" Data.Bifunctor (first)
+import safe "base" Data.Bool (Bool, not, (&&))
+import safe qualified "base" Data.Bool as Bool
 import safe "base" Data.Char (isUpper, toLower)
 import safe "base" Data.Either (either)
 import safe qualified "base" Data.Foldable as Foldable
 import safe "base" Data.Function (flip, ($))
 import safe "base" Data.Functor (fmap, (<$>))
 import safe qualified "base" Data.List as List
-import safe "base" Data.Maybe (maybe)
+import safe qualified "base" Data.Maybe as Maybe
 import safe "base" Data.Monoid (mconcat, (<>))
 import safe "base" Data.Ord ((<))
 import safe "base" Data.String (String)
-import safe "base" Data.Tuple (uncurry)
+import safe "base" Data.Tuple (fst, snd, uncurry)
 import safe "base" Data.Version (Version, showVersion)
 import safe "base" System.Exit (die)
 import safe "base" System.IO (IO, putStr)
 import safe "base" Text.Show (show)
 import safe "this" GhcCompat.GhcRelease (GhcRelease)
 import safe qualified "this" GhcCompat.GhcRelease as GhcRelease
-import safe "this" GhcCompat.Opts (Opts (Opts), ReportLevel (Error, Warn))
+import safe "this" GhcCompat.Opts
+  ( Opts (Opts),
+    ReportLevel (Error, Warn),
+    correctOptionOrder,
+  )
 import safe qualified "this" GhcCompat.Opts as Opts
+#if MIN_VERSION_ghc(8, 2, 1)
+import safe "base" Data.Eq ((==))
+#endif
 #if MIN_VERSION_ghc(9, 0, 0)
 import "ghc" GHC.Plugins (Plugin, defaultPlugin)
 import qualified "ghc" GHC.Plugins as Plugins
@@ -59,20 +68,20 @@ plugin =
 #if MIN_VERSION_ghc(9, 2, 1)
     { Plugins.driverPlugin = \optStrs env ->
         fmap (\dflags -> env {Plugins.hsc_dflags = dflags})
-          . dflagsPlugin optStrs
+          . dflagsPlugin (correctOptionOrder optStrs)
           $ Plugins.hsc_dflags env,
       Plugins.pluginRecompile = Plugins.flagRecompile
     }
 #elif MIN_VERSION_ghc(8, 10, 1)
-    { Plugins.dynflagsPlugin = dflagsPlugin,
+    { Plugins.dynflagsPlugin = dflagsPlugin . correctOptionOrder,
       Plugins.pluginRecompile = Plugins.flagRecompile
     }
 #elif MIN_VERSION_ghc(8, 6, 1)
-    { Plugins.installCoreToDos = install,
+    { Plugins.installCoreToDos = install . correctOptionOrder,
       Plugins.pluginRecompile = Plugins.purePlugin
     }
 #else
-    { Plugins.installCoreToDos = install
+    { Plugins.installCoreToDos = install . correctOptionOrder
     }
 #endif
 
@@ -130,7 +139,7 @@ formatFlag =
   where
     splitWords :: [String] -> String -> [String]
     splitWords acc =
-      maybe
+      Maybe.maybe
         acc
         ( \(h, t) ->
             uncurry splitWords . first ((acc <>) . pure . (toLower h :)) $
@@ -141,10 +150,10 @@ formatFlag =
 warnFlags :: [Plugins.CommandLineOption] -> Opts -> Plugins.DynFlags -> IO ()
 warnFlags optStrs opts dflags =
   let minVer = Opts.minVersion opts
-   in maybe
+   in Maybe.maybe
         (pure ())
         ( \level ->
-            maybe
+            Maybe.maybe
               (pure ())
               ( ( case level of
                     Opts.Warn -> putStr . (errorPrelude optStrs "warning" <>)
@@ -168,10 +177,10 @@ warnFlags optStrs opts dflags =
 warnExts :: [Plugins.CommandLineOption] -> Opts -> Plugins.DynFlags -> IO ()
 warnExts optStrs opts dflags =
   let minVer = Opts.minVersion opts
-   in maybe
+   in Maybe.maybe
         (pure ())
         ( \level ->
-            maybe
+            Maybe.maybe
               (pure ())
               ( ( case level of
                     Opts.Warn -> putStr . (errorPrelude optStrs "warning" <>)
@@ -226,18 +235,53 @@ errorPrelude optStrs prefix =
 usedIncompatibleExtensions ::
   Version -> Plugins.DynFlags -> [GhcRelease.Extension]
 #if MIN_VERSION_ghc(9, 6, 1)
-usedIncompatibleExtensions minVersion =
-  List.intersect (incompatibleExtensions minVersion)
+usedIncompatibleExtensions minVersion dflags =
+  List.intersect
+    ( List.filter
+        ( \e ->
+            not (allowedImpliedByExtension dflags e)
+              && not (allowedLanguageEditionExtension dflags e)
+        )
+        $ incompatibleExtensions minVersion
+    )
     . fmap removeSwitch
-    . Plugins.extensions
+    $ Plugins.extensions dflags
   where
     removeSwitch onOff = case onOff of
       Plugins.Off a -> a
       Plugins.On a -> a
 #else
 usedIncompatibleExtensions minVersion dflags =
-  List.filter (`Plugins.xopt` dflags) $ incompatibleExtensions minVersion
+  List.filter
+    ( \e ->
+        e `Plugins.xopt` dflags
+          && not (allowedImpliedByExtension dflags e)
+          && not (allowedLanguageEditionExtension dflags e)
+    )
+    $ incompatibleExtensions minVersion
 #endif
+
+languageEdition :: Plugins.DynFlags -> Maybe.Maybe Plugins.Language
+languageEdition = Maybe.maybe def pure . Plugins.language
+#if MIN_VERSION_ghc(9, 2, 1)
+  where def = pure Plugins.GHC2021
+#else
+  where def = Maybe.Nothing
+#endif
+
+allowedLanguageEditionExtension ::
+  Plugins.DynFlags -> GhcRelease.Extension -> Bool
+allowedLanguageEditionExtension dflags ext =
+  Maybe.maybe
+    Bool.False
+    (\lang -> ext `List.elem` languageEditionExtensions lang)
+    $ languageEdition dflags
+
+allowedImpliedByExtension :: Plugins.DynFlags -> GhcRelease.Extension -> Bool
+allowedImpliedByExtension dflags ext =
+  -- NB: In this case we /always/ want `Plugins.xopt`, because the implication
+  --     only occurs when the extension is enabled.
+  Foldable.any (`Plugins.xopt` dflags) $ impliedByExtensions ext
 
 -- | A list of /all/ extensions that are incompatible with the provided version.
 incompatibleExtensions :: Version -> [GhcRelease.Extension]
@@ -265,3 +309,40 @@ whenOlder minVersion flagAddedVersion flags =
 disableIfOlder ::
   [(Version, [Plugins.WarningFlag])] -> Version -> [Plugins.WarningFlag]
 disableIfOlder = flip $ Foldable.concatMap . uncurry . whenOlder
+
+-- | GHC before 8.2 doesn’t define `Eq` for `Plugins.Language`, so this does it.
+eqLanguage :: Plugins.Language -> Plugins.Language -> Bool
+#if MIN_VERSION_ghc(8, 2, 1)
+eqLanguage = (==)
+#else
+eqLanguage x y = case (x, y) of
+  (Plugins.Haskell98, Plugins.Haskell98) -> Bool.True
+  (Plugins.Haskell2010, Plugins.Haskell2010) -> Bool.True
+  (_, _) -> Bool.False
+#endif
+
+-- | A language edition may fool us by setting an extension (even negatively) on
+--   a newer GHC that it wouldn’t (need to) set on an older one. This whitelists
+--   those extensions.
+--
+--  __TODO__: It would still be good to give an info message in this case,
+--            because we can’t know if the extension was implicit from the
+--            language edition or explicit.
+--          - Actually, we /can/ know if the `OnOff` is the opposite of the one
+--            the edition sets.
+languageEditionExtensions :: Plugins.Language -> [GhcRelease.Extension]
+languageEditionExtensions language =
+  snd <=< List.filter (eqLanguage language . fst) $
+    Foldable.foldMap GhcRelease.newEditions GhcRelease.all
+
+-- | Sometimes an extension from a later release may be implied by an extension
+--   from an earlier relase. This can fool use, because the implied extension
+--   will be included in the enabled extensions, so we need to whitelist those
+--   /when/ an extension that implies it is enabled.
+--
+--  __TODO__: Like with `languageEditionExtensions`, we should be smart enough
+--            to recognize that we should still warn about @NoFoo@, even if
+--            @Foo@ was implied by a supported extension (ad reverse if @NoFoo@
+--            is the implied form).
+impliedByExtensions :: GhcRelease.Extension -> [GhcRelease.Extension]
+impliedByExtensions = Foldable.foldMap GhcRelease.newImplications GhcRelease.all
