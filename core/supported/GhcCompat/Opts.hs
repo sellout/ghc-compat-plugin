@@ -37,7 +37,7 @@ import "base" Text.ParserCombinators.ReadP (readP_to_S)
 --   This ensures the plugin always receives then in the order they were
 --   provided on the command line.
 correctOptionOrder :: [String] -> [String]
-#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 1, 0)
 correctOptionOrder x = x
 #else
 correctOptionOrder = reverse
