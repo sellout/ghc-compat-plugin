@@ -115,6 +115,10 @@ library
   else
     ghc-options:
       -Wall
+  if impl(ghc >= 8.4.1) && impl(ghc < 9.4.1)
+    ghc-options:
+      -- This breaks `MIN_VERSION_GLASGOW_HASKELL` on some GHCs.`
+      -Wno-cpp-undef
   if flag(noisy-deprecations)
     cpp-options:
       -DSELLOUT_NOISY_DEPRECATIONS

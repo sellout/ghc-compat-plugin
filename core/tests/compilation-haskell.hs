@@ -31,22 +31,22 @@ import qualified Test.Min_8_0_1
 #if MIN_VERSION_GLASGOW_HASKELL(8, 2, 1, 0)
 import qualified Test.Min_8_2_1
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(8, 4, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 4, 1, 0)
 import qualified Test.Min_8_4_1
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 1, 0)
 import qualified Test.Min_8_6_1
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(8, 8, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 8, 1, 0)
 import qualified Test.Min_8_8_1
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(8, 10, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 10, 1, 0)
 import qualified Test.Min_8_10_1
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(9, 0, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(9, 0, 1, 0)
 import qualified Test.Min_9_0_1
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(9, 2, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(9, 2, 1, 0)
 import qualified Test.SupportGHC2021
 #endif
 
@@ -77,21 +77,21 @@ main =
 #if MIN_VERSION_GLASGOW_HASKELL(8, 2, 1, 0)
       <> Test.Min_8_2_1.force
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(8, 4, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 4, 1, 0)
       <> Test.Min_8_4_1.force
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 1, 0)
       <> Test.Min_8_6_1.force
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(8, 8, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 8, 1, 0)
       <> Test.Min_8_8_1.force
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(8, 10, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 10, 1, 0)
       <> Test.Min_8_10_1.force
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(9, 0, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(9, 0, 1, 0)
       <> Test.Min_9_0_1.force
 #endif
-#if MIN_VERSION_GLASGOW_HASKELL(9, 2, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(9, 2, 1, 0)
       <> Test.SupportGHC2021.force
 #endif

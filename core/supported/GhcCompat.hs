@@ -51,7 +51,7 @@ import safe qualified "this" GhcCompat.Opts as Opts
 #if MIN_VERSION_ghc(8, 2, 1)
 import safe "base" Data.Eq ((==))
 #endif
-#if MIN_VERSION_ghc(9, 0, 0)
+#if MIN_VERSION_ghc(9, 0, 1)
 import "ghc" GHC.Plugins (Plugin, defaultPlugin)
 import qualified "ghc" GHC.Plugins as Plugins
 #else

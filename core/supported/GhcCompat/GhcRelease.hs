@@ -51,18 +51,18 @@ where
 import safe "base" Control.Applicative (pure)
 import safe "base" Data.Int (Int)
 import safe "base" Data.Version (Version, makeVersion)
-#if MIN_VERSION_ghc(8, 0, 0)
+#if MIN_VERSION_ghc(8, 0, 1)
 import safe qualified "ghc-boot-th" GHC.LanguageExtensions.Type as Extension
 #else
 import qualified "ghc" GhcPlugins as Extension
 #endif
-#if MIN_VERSION_ghc(9, 0, 0)
+#if MIN_VERSION_ghc(9, 0, 1)
 import qualified "ghc" GHC.Plugins as Plugins
 #else
 import qualified "ghc" GhcPlugins as Plugins
 #endif
 
-#if MIN_VERSION_ghc(8, 0, 0)
+#if MIN_VERSION_ghc(8, 0, 1)
 type Extension = Extension.Extension
 #else
 type Extension = Plugins.ExtensionFlag
@@ -554,9 +554,7 @@ ghc_8_2_1 =
 ghc_8_4_1 :: GhcRelease
 ghc_8_4_1 =
   (ghcRelease [8, 4, 1])
-
--- Some versions of GHC error if the third field isn’t 0.
-#if MIN_VERSION_GLASGOW_HASKELL(8, 4, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 4, 1, 0)
     { newExtensions =
         [ Extension.EmptyDataDeriving,
           Extension.HexFloatLiterals
@@ -567,9 +565,7 @@ ghc_8_4_1 =
 ghc_8_6_1 :: GhcRelease
 ghc_8_6_1 =
   (ghcRelease [8, 6, 1])
-
--- Some versions of GHC error if the third field isn’t 0.
-#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 1, 0)
     { newEditions =
         [ (Plugins.Haskell98, [Extension.StarIsType]),
           (Plugins.Haskell2010, [Extension.StarIsType])
@@ -588,9 +584,7 @@ ghc_8_6_1 =
 ghc_8_8_1 :: GhcRelease
 ghc_8_8_1 =
   (ghcRelease [8, 8, 1])
-
--- Some versions of GHC error if the third field isn’t 0.
-#if MIN_VERSION_GLASGOW_HASKELL(8, 8, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 8, 1, 0)
     { newWarnings = [(ghc_8_2_1, [Plugins.Opt_WarnMissingDerivingStrategies])]
     }
 #endif
@@ -598,9 +592,7 @@ ghc_8_8_1 =
 ghc_8_10_1 :: GhcRelease
 ghc_8_10_1 =
   (ghcRelease [8, 10, 1])
-
--- Some versions of GHC error if the third field isn’t 0.
-#if MIN_VERSION_GLASGOW_HASKELL(8, 10, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(8, 10, 1, 0)
     { newEditions =
         [ (Plugins.Haskell98, [Extension.CUSKs]),
           (Plugins.Haskell2010, [Extension.CUSKs])
@@ -618,9 +610,7 @@ ghc_8_10_1 =
 ghc_9_0_1 :: GhcRelease
 ghc_9_0_1 =
   (ghcRelease [9, 0, 1])
-
--- Some versions of GHC error if the third field isn’t 0.
-#if MIN_VERSION_GLASGOW_HASKELL(9, 0, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(9, 0, 1, 0)
     { newExtensions =
         [ Extension.LexicalNegation,
           Extension.LinearTypes,
@@ -632,9 +622,7 @@ ghc_9_0_1 =
 ghc_9_2_1 :: GhcRelease
 ghc_9_2_1 =
   (ghcRelease [9, 2, 1])
-
--- Some versions of GHC error if the third field isn’t 0.
-#if MIN_VERSION_GLASGOW_HASKELL(9, 2, 0, 0)
+#if MIN_VERSION_GLASGOW_HASKELL(9, 2, 1, 0)
     { newEditions =
         [ (Plugins.Haskell98, [Extension.FieldSelectors]),
           (Plugins.Haskell2010, [Extension.FieldSelectors]),
@@ -672,7 +660,7 @@ ghc_9_2_1 =
 #if MIN_VERSION_GLASGOW_HASKELL(9, 4, 1, 0)
               Extension.NamedFieldPuns,
 #else
-              Extension.RecordPuns
+              Extension.RecordPuns,
 #endif
               Extension.NamedWildCards,
               Extension.NumericUnderscores,
