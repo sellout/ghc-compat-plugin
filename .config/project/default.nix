@@ -24,6 +24,13 @@
 
   imports = [./hlint.nix];
 
+  ## Current versions of HLint and Ormolu don't yet support GHC 9.14, so skip
+  ## the file that requires it.
+  programs.treefmt.settings.formatter = {
+    hlint.excludes = ["*/Min_9_14_1.hs"];
+    ormolu.excludes = ["*/Min_9_14_1.hs"];
+  };
+
   ## CI
   ## FIXME: Shouldn’t need `mkForce` here (or to duplicate the base contexts).
   ##        Need to improve module merging.
