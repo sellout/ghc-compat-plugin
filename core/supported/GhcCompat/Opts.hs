@@ -16,6 +16,7 @@ where
 
 import "base" Control.Applicative (pure)
 import "base" Control.Category ((.))
+import "base" Control.Monad ((<=<))
 import "base" Data.Bifunctor (second)
 import "base" Data.Either (Either (Left))
 import "base" Data.Eq ((==))
@@ -55,9 +56,17 @@ data Opts = Opts
     reportIncompatibleExtensions :: Maybe ReportLevel
   }
 
+parseVersion' :: String -> Either String Version
+parseVersion' versionStr =
+  maybe
+    (Left $ "Couldn’t parse ‘minVersion’ value ‘" <> versionStr <> "’.")
+    pure
+    $ readVersion versionStr
+
 parseOpt :: Opts -> String -> String -> Either String Opts
 parseOpt opts name value = case (name, value) of
-  ("minVersion", _) -> pure opts
+  ("minVersion", version) ->
+    (\v -> opts {minVersion = v}) <$> parseVersion' version
   ("reportIncompatibleExtensions", level) ->
     (\v -> opts {reportIncompatibleExtensions = v}) <$> case level of
       "no" -> pure Nothing
@@ -77,14 +86,10 @@ parse optStrs =
   let kv = second (drop 1) . break (== '=') <$> optStrs
    in maybe
         (Left "Missing required ‘minVersion’ plugin-opt.")
-        ( \versionStr ->
-            maybe
-              ( Left $
-                  "Couldn’t parse ‘minVersion’ value ‘" <> versionStr <> "’."
-              )
-              ( \version ->
-                  foldrM (flip $ uncurry . parseOpt) (defaultOpts version) kv
-              )
-              $ readVersion versionStr
+        ( ( \version ->
+              foldrM (flip $ uncurry . parseOpt) (defaultOpts version) $
+                reverse kv
+          )
+            <=< parseVersion'
         )
         $ lookup "minVersion" kv
