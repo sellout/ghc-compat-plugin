@@ -87,15 +87,16 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1770059039,
-        "narHash": "sha256-3hWZRAr/gKPjWJFN4WMo8INvE50ikoDPPy3zGNXtoJE=",
+        "lastModified": 1770335471,
+        "narHash": "sha256-WuQ80h11k7gRFFxu6r9slqvtrjgMXDS+omizFPqx3Gg=",
         "owner": "sellout",
         "repo": "flaky",
-        "rev": "114fa430a7c65b038c4bef8a034d0c66819dd74e",
+        "rev": "2787c53afba686e70700d3ad0d3a894cdc68d52d",
         "type": "github"
       },
       "original": {
         "owner": "sellout",
+        "ref": "haskell-updates",
         "repo": "flaky",
         "type": "github"
       }
