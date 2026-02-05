@@ -53,6 +53,14 @@
               ## GHC doesn’t support ARM before GHC 9.2.
               || lib.versionOlder ghc "9.2"
               && builtins.elem sys ["macos-15" "ubuntu-24.04-arm"]
+              ## GHC 9.2.1 relied on libnuma at runtime for aarch64
+              || ghc == "9.2.1" && sys == "ubuntu-24.04-arm"
+              ## Plugins are broken on GHC 8.6.1 on Windows, need to use 8.6.2 instead.
+              || ghc == "8.6.1" && sys == "windows-2025"
+              ## Test is unreliable – we still run it, but don’t require it (maybe related: https://gitlab.haskell.org/ghc/ghc/-/issues/19222)
+              || ghc == "8.10.1" && sys == "windows-2025"
+              ## UNKNOWN
+              || (ghc == "9.2.1" || ghc == "9.2.4" || ghc == "9.4.1") && sys == "macos-15"
             then []
             else [
               "build (${ghc}, ${sys})"
@@ -76,8 +84,37 @@
     checkBounds.enable = false;
     ## The latest Stackage LTS that we also build on GitHub for.
     latestGhcVersion = "9.10.1";
+    exclude =
+      [
+        ## Plugins are broken on GHC 8.6.1 on Windows, need to use 8.6.2 instead.
+        ## https://gitlab.haskell.org/ghc/ghc/-/commit/d2cd150eda599d0de83fc687efc48e22a2e74a5e
+        {
+          ghc = "8.6.1";
+          os = "windows-2025";
+        }
+      ]
+      ## UNKNOWN: TESTS FAIL … but tests are NOP
+      ++ map (ghc: {
+        inherit ghc;
+        os = "macos-15";
+      }) ["9.2.1" "9.2.4" "9.4.1"];
+
+    include =
+      lib.concatMap (bounds: [
+        {
+          inherit bounds;
+          ghc = "8.6.2";
+          os = "windows-2025";
+        }
+        {
+          inherit bounds;
+          ghc = "9.4.8";
+          os = "macos-15";
+        }
+      ])
+      ["" "--prefer-oldest"];
   };
 
   ## publishing
-  services.github.settings.repository.topics = [];
+  services.github.settings.repository.topics = ["compatibility" "plugin"];
 }
