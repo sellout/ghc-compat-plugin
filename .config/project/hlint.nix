@@ -32,10 +32,16 @@
         ## This can be removed once we no longer support ≤ base 4.18, which
         ## doesn’t yet export `Data.Functor.unzip`.
         "Avoid NonEmpty.unzip"
+        ## We intentionally enable a large number of extensions, and in some
+        ## cases, for some GHC versions, it matters whether they are on or not
+        ## (so we can’t just use `No`).
+        "Unused LANGUAGE pragma"
         ## This complains when we use a common import and then import from the
         ## same module under a CPP conditional. Since Ormolu handles combinig
         ## imports when possible anyway, this warning isn’t helpful.
         "Use fewer imports"
+        ## Not supported until GHC 7.6
+        "Use lambda-case"
         ## I just don’t like them (even the monadic variant).
         "Use list comprehension"
       ];

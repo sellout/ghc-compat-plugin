@@ -129,9 +129,9 @@ in
         "8.10.1"
         "9.0.1"
         "9.2.1"
+        "9.2.4" # the only non-major version with a new extension
         "9.4.1"
         "9.6.1"
-        ## since `cabal-plan-bounds` doesn’t work under Nix
         "9.8.1"
         "9.10.1"
         "9.12.1"
