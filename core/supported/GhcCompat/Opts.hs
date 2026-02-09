@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Safe #-}
 
 -- |
@@ -8,6 +9,7 @@
 module GhcCompat.Opts
   ( Opts (Opts),
     ReportLevel (Error, Warn),
+    correctOptionOrder,
     minVersion,
     parse,
     reportIncompatibleExtensions,
@@ -16,6 +18,7 @@ where
 
 import "base" Control.Applicative (pure)
 import "base" Control.Category ((.))
+import "base" Control.Monad ((<=<))
 import "base" Data.Bifunctor (second)
 import "base" Data.Either (Either (Left))
 import "base" Data.Eq ((==))
@@ -29,6 +32,16 @@ import "base" Data.String (String)
 import "base" Data.Tuple (fst, uncurry)
 import "base" Data.Version (Version, parseVersion)
 import "base" Text.ParserCombinators.ReadP (readP_to_S)
+
+-- | `-fplugin-opt`s are provided to the plugin in reverse order before GHC 8.6.
+--   This ensures the plugin always receives then in the order they were
+--   provided on the command line.
+correctOptionOrder :: [String] -> [String]
+#if MIN_VERSION_GLASGOW_HASKELL(8, 6, 1, 0)
+correctOptionOrder x = x
+#else
+correctOptionOrder = reverse
+#endif
 
 -- | This mirrors the levels provided by GHC’s warning flags. Correspondingly,
 --   we use the lowercase forms for the plugin opts instead of the capitalized
@@ -55,9 +68,17 @@ data Opts = Opts
     reportIncompatibleExtensions :: Maybe ReportLevel
   }
 
+parseVersion' :: String -> Either String Version
+parseVersion' versionStr =
+  maybe
+    (Left $ "Couldn’t parse ‘minVersion’ value ‘" <> versionStr <> "’.")
+    pure
+    $ readVersion versionStr
+
 parseOpt :: Opts -> String -> String -> Either String Opts
 parseOpt opts name value = case (name, value) of
-  ("minVersion", _) -> pure opts
+  ("minVersion", version) ->
+    (\v -> opts {minVersion = v}) <$> parseVersion' version
   ("reportIncompatibleExtensions", level) ->
     (\v -> opts {reportIncompatibleExtensions = v}) <$> case level of
       "no" -> pure Nothing
@@ -77,14 +98,10 @@ parse optStrs =
   let kv = second (drop 1) . break (== '=') <$> optStrs
    in maybe
         (Left "Missing required ‘minVersion’ plugin-opt.")
-        ( \versionStr ->
-            maybe
-              ( Left $
-                  "Couldn’t parse ‘minVersion’ value ‘" <> versionStr <> "’."
-              )
-              ( \version ->
-                  foldrM (flip $ uncurry . parseOpt) (defaultOpts version) kv
-              )
-              $ readVersion versionStr
+        ( ( \version ->
+              foldrM (flip $ uncurry . parseOpt) (defaultOpts version) $
+                reverse kv
+          )
+            <=< parseVersion'
         )
         $ lookup "minVersion" kv
