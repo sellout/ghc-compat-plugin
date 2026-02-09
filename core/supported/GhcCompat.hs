@@ -31,6 +31,7 @@ import safe qualified "base" Data.Foldable as Foldable
 import safe "base" Data.Function (flip, ($))
 import safe "base" Data.Functor (fmap, (<$>))
 import safe qualified "base" Data.List as List
+import safe "base" Data.Maybe (Maybe (Nothing))
 import safe qualified "base" Data.Maybe as Maybe
 import safe "base" Data.Monoid (mconcat, (<>))
 import safe "base" Data.Ord ((<))
@@ -91,6 +92,7 @@ dflagsPlugin ::
 dflagsPlugin optStrs dflags = do
   opts <-
     either (die . (errorPrelude optStrs "error" <>)) pure $ Opts.parse optStrs
+  warnLanguage optStrs opts dflags
   warnFlags optStrs opts dflags
   warnExts optStrs opts dflags
   pure $ updateFlags (Opts.minVersion opts) dflags
@@ -125,6 +127,33 @@ identifyProblematicFlags minVersion dflags =
       ((< GhcRelease.version GhcRelease.ghc_8_10_1) . GhcRelease.version)
       GhcRelease.all
 
+identifyProblematicLanguage ::
+  Version -> Plugins.DynFlags -> Maybe (Maybe Plugins.Language)
+identifyProblematicLanguage minVersion dflags =
+  Maybe.maybe
+    ( if minVersion < GhcRelease.version GhcRelease.ghc_9_2_1
+        then pure Nothing
+        else Nothing
+    )
+    (fmap pure . check)
+    $ Plugins.language dflags
+  where
+    check lang = case lang of
+      Plugins.Haskell98 -> Nothing
+      Plugins.Haskell2010 -> Nothing
+#if MIN_VERSION_ghc(9, 2, 1)
+      Plugins.GHC2021 ->
+        if minVersion < GhcRelease.version GhcRelease.ghc_9_2_1
+        then pure lang
+        else Nothing
+#endif
+#if MIN_VERSION_ghc(9, 10, 1)
+      Plugins.GHC2024 ->
+        if minVersion < GhcRelease.version GhcRelease.ghc_9_10_1
+        then pure lang
+        else Nothing
+#endif
+
 -- | Try to print a flag the way it looks to a user.
 --
 --  __FIXME__: `show` on flags doesn’t display them nicely, but I don’t see
@@ -146,6 +175,32 @@ formatFlag =
               List.break isUpper t
         )
         . List.uncons
+
+warnLanguage :: [Plugins.CommandLineOption] -> Opts -> Plugins.DynFlags -> IO ()
+warnLanguage optStrs opts dflags =
+  let minVer = Opts.minVersion opts
+   in Maybe.maybe
+        (pure ())
+        ( \level ->
+            Maybe.maybe
+              (pure ())
+              ( ( case level of
+                    Opts.Warn -> putStr . (errorPrelude optStrs "warning" <>)
+                    Opts.Error -> die . (errorPrelude optStrs "error" <>)
+                )
+                  . Maybe.maybe
+                    "You are using an implicit language edition, which will be GHC2021 from GHC\n    9.2.1, but empty before that. You should explicitly set it to Haskell2010."
+                    ( \lang ->
+                        "You are using the "
+                          <> show lang
+                          <> " language edition, which is not available in ‘minVersion’ ("
+                          <> showVersion minVer
+                          <> ").\n"
+                    )
+              )
+              $ identifyProblematicLanguage minVer dflags
+        )
+        $ Opts.reportIncompatibleExtensions opts
 
 warnFlags :: [Plugins.CommandLineOption] -> Opts -> Plugins.DynFlags -> IO ()
 warnFlags optStrs opts dflags =
@@ -261,7 +316,7 @@ usedIncompatibleExtensions minVersion dflags =
     $ incompatibleExtensions minVersion
 #endif
 
-languageEdition :: Plugins.DynFlags -> Maybe.Maybe Plugins.Language
+languageEdition :: Plugins.DynFlags -> Maybe Plugins.Language
 languageEdition = Maybe.maybe def pure . Plugins.language
 #if MIN_VERSION_ghc(9, 2, 1)
   where def = pure Plugins.GHC2021
