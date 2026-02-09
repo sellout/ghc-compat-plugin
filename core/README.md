@@ -12,8 +12,8 @@ Often GHC will add warnings to encourage users to make use of newer language fea
 
 This plugin does three things:
 
-1. reports if you use any [language extensions]() that aren’t supported by your minimum GHC version,
-2. automatically disables any [warnings]() where addressing them requires features that aren’t part of your minimum GHC version, and
+1. reports if you use a [language edition](https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/control.html) or [language extensions](https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/table.html) that aren’t supported by your minimum GHC version,
+2. automatically disables any [warnings](https://ghc.gitlab.haskell.org/ghc/doc/users_guide/using-warnings.html) where addressing them requires features that aren’t part of your minimum GHC version, and
 3. reports any warnings from no. 2 that were introduced before GHC 8.10.1[^1].
 
 [^1]: This is because before GHC 8.10.1, plugins couldn’t modify warning flags, so we report them to allow them to be manually disabled.
