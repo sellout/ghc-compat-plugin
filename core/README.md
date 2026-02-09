@@ -40,7 +40,7 @@ Add the following to any stanzas[^2] in your Cabal package files.
 [^2]: I like to put it in a `common` section (provided you’re using at least Cabal 2.2) that’s imported by all my stanzas.
 
 ```cabal
-  build-depends: ghc-compat-plugin >=0.0.2 && <0.1
+  build-depends: ghc-compat-plugin >=0.1.0 && <0.2
   ghc-options:
     -fplugin=GhcCompat
     -fplugin-opt=GhcCompat:minVersion=8.8.1
@@ -60,7 +60,7 @@ You can also add
 
 ```cabal
   if impl(ghc >= 7.2.1)
-    build-depends: ghc-compat-plugin >=0.0.2 && <0.1
+    build-depends: ghc-compat-plugin >=0.1.0 && <0.2
     ghc-options:
       -fplugin=GhcCompat
       -fplugin-opt=GhcCompat:minVersion=6.8.1
