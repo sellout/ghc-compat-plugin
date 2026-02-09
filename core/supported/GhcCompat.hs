@@ -111,6 +111,7 @@ install optStrs todos = do
     Plugins.liftIO . either (die . (errorPrelude optStrs "error" <>)) pure $
       Opts.parse optStrs
   dflags <- Plugins.getDynFlags
+  Plugins.liftIO $ warnLanguage optStrs opts dflags
   Plugins.liftIO $ warnFlags optStrs opts dflags
   Plugins.liftIO $ warnExts optStrs opts dflags
   pure todos
@@ -192,7 +193,7 @@ warnLanguage optStrs opts dflags =
                     "You are using an implicit language edition, which will be GHC2021 from GHC\n    9.2.1, but empty before that. You should explicitly set it to Haskell2010."
                     ( \lang ->
                         "You are using the "
-                          <> show lang
+                          <> showLanguage lang
                           <> " language edition, which is not available in ‘minVersion’ ("
                           <> showVersion minVer
                           <> ").\n"
@@ -374,6 +375,17 @@ eqLanguage x y = case (x, y) of
   (Plugins.Haskell98, Plugins.Haskell98) -> Bool.True
   (Plugins.Haskell2010, Plugins.Haskell2010) -> Bool.True
   (_, _) -> Bool.False
+#endif
+
+-- | GHC before 8.2 doesn’t define `Show` for `Plugins.Language`, so this does
+--   it.
+showLanguage :: Plugins.Language -> String
+#if MIN_VERSION_ghc(8, 2, 1)
+showLanguage = show
+#else
+showLanguage x = case x of
+  Plugins.Haskell98 -> "Haskell98"
+  Plugins.Haskell2010 -> "Haskell2010"
 #endif
 
 -- | A language edition may fool us by setting an extension (even negatively) on
