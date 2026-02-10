@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog 1.1](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to the [Haskell Package Versioning Policy](https://pvp.haskell.org/).
 
+## [0.1.0.1] – 2026-02-10
+
+### Fixed
+
+- explicitly include test drivers that were being overlooked by sdist (#9)
+
 ## [0.1.0.0] – 2026-02-09
 
 ### Added
@@ -32,6 +38,7 @@ and this project adheres to the [Haskell Package Versioning Policy](https://pvp.
 
 <!-- NB: The version on the left is the Haskell package version (PVP), the version on the right is the repo (tag) version (SemVer). Their only relationship is that a change of any severity on the left implies a change of at least that severity on the right. -->
 
+[0.1.0.1]: https://github.com/sellout/ghc-compat-plugin/compare/v1.0.0...v1.0.1
 [0.1.0.0]: https://github.com/sellout/ghc-compat-plugin/compare/v0.2.0...v1.0.0
 [0.0.2.0]: https://github.com/sellout/ghc-compat-plugin/compare/v0.1.0...v0.2.0
 [0.0.1.0]: https://github.com/sellout/ghc-compat-plugin/releases/tag/v0.1.0

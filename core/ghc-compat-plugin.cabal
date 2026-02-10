@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- https://cabal.readthedocs.io/en/stable/file-format-changelog.html
 
 name: ghc-compat-plugin
-version: 0.1.0.0
+version: 0.1.0.1
 synopsis: Eases support for multiple GHC versions
 description: Controls various GHC options and extensions to make compilation
              across multiple versions easier, and to alert you to
@@ -25,6 +25,10 @@ extra-source-files:
   README.md
   docs/*.md
   tests/README.md
+  -- These files are `main-is`, but seem to be missing from sdist … because of
+  -- conditionalization?
+  tests/compilation-ghc2021.hs
+  tests/compilation-ghc2024.hs
 tested-with:
   GHC ==7.10.3
   || ==8.0.2
@@ -55,7 +59,7 @@ source-repository this
   location: https://github.com/sellout/ghc-compat-plugin.git
   subdir: core
   -- NB: This is the repo version, which is distinct from the package version.
-  tag: v1.0.0
+  tag: v1.0.1
 
 flag noisy-deprecations
   description:
