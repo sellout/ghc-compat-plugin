@@ -76,6 +76,7 @@ flag noisy-deprecations
 library
   default-language: Haskell98
   build-depends:
+    base >=4.8.0 && <4.23,
     ghc >=7.2.1 && <9.16
   default-extensions:
     -- 6.8.1
@@ -84,13 +85,15 @@ library
     -- 6.10.1
     NamedFieldPuns
     PackageImports
+  hs-source-dirs:
+    src
   exposed-modules:
     GhcCompat
+  other-modules:
+    GhcCompat.Utils
   -- blockers for supporting GHC <7.10:
   -- - use of `MIN_VERSION_GLASGOW_HASKELL`
   if impl(ghc >= 7.10.1)
-    build-depends:
-      base >=4.8.0 && <4.23
     if impl(ghc >= 8.0.1)
       build-depends:
         ghc-boot-th >=8.0.1 && <9.16
@@ -102,6 +105,90 @@ library
   else
     hs-source-dirs:
       unsupported
+  if impl(ghc >= 8.0.1)
+    ghc-options:
+      -Weverything
+      -- This one just reports unfixable things, AFAICT.
+      -Wno-all-missed-specialisations
+      -- Type inference good.
+      -Wno-missing-local-signatures
+      -- Warns even when `Unsafe` is explicit, not inferred. See
+      -- https://gitlab.haskell.org/ghc/ghc/-/issues/16689
+      -Wno-unsafe
+    if impl(ghc < 8.8.1)
+      ghc-options:
+        -- This used to warn even when `Safe` was explicit.
+        -Wno-safe
+  else
+    ghc-options:
+      -Wall
+  if impl(ghc >= 8.4.1) && impl(ghc < 9.4.1)
+    ghc-options:
+      -- This breaks `MIN_VERSION_GLASGOW_HASKELL` on some GHCs.`
+      -Wno-cpp-undef
+  if flag(noisy-deprecations)
+    cpp-options:
+      -DSELLOUT_NOISY_DEPRECATIONS
+  -- THIS PLUGIN WILL INFORM YOU AS TO WHETHER YOU NEED THE FOLLOWING
+  -- CONDITIONALS IN YOUR OWN CABAL FILES.
+  if impl(ghc >= 7.10.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 7.8.1+
+      -fno-warn-deriving-typeable
+  if impl(ghc >= 8.6.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 8.6.1+
+      -Wno-star-is-type
+  if impl(ghc >= 8.8.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 8.2.1+
+      -Wno-missing-deriving-strategies
+  -- THIS PLUGIN ELIMINATES THE NEED FOR THE FOLLOWING CONDITIONALS IN YOUR OWN
+  -- CABAL FILES.
+  if impl(ghc >= 8.10.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 8.10.1+
+      -Wno-prepositive-qualified-module
+  if impl(ghc >= 9.2.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 6.8.1+
+      -Wno-missing-kind-signatures
+  if impl(ghc >= 9.8.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 7.4.1+
+      -Wno-missing-poly-kind-signatures
+      -- remove if the oldest supported version is GHC 7.8.1+
+      -Wno-missing-role-annotations
+  if impl(ghc >= 9.14.1)
+    ghc-options:
+      -- remove if the oldest supported version is GHC 9.14.1+
+      -Wno-pattern-namespace-specifier
+
+-- This just ensures that we _can_ compile the “unsupported” implementation
+-- across all GHC versions. This won’t be necessary once ghc-plugin-utils
+-- exists, because all of the interesting code will be tested as part of that
+-- package. The local implementation won’t even need any other dependencies.
+test-suite unsupported
+  default-language: Haskell98
+  type: exitcode-stdio-1.0
+  build-depends:
+    base >=4.8.0 && <4.23,
+    ghc >=7.2.1 && <9.16
+  default-extensions:
+    -- 6.8.1
+    NoImplicitPrelude
+    NoMonomorphismRestriction
+    -- 6.10.1
+    NamedFieldPuns
+    PackageImports
+  hs-source-dirs:
+    src
+    tests
+    unsupported
+  main-is: unsupported.hs
+  other-modules:
+    GhcCompat
+    GhcCompat.Utils
   if impl(ghc >= 8.0.1)
     ghc-options:
       -Weverything
