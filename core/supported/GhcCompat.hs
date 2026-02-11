@@ -49,6 +49,7 @@ import safe "this" GhcCompat.Opts
     correctOptionOrder,
   )
 import safe qualified "this" GhcCompat.Opts as Opts
+import safe qualified "this" GhcCompat.Utils as Utils
 #if MIN_VERSION_ghc(8, 2, 1)
 import safe "base" Data.Eq ((==))
 #endif
@@ -59,6 +60,9 @@ import qualified "ghc" GHC.Plugins as Plugins
 import "ghc" GhcPlugins (Plugin, defaultPlugin)
 import qualified "ghc" GhcPlugins as Plugins
 #endif
+
+errorPrelude :: [Plugins.CommandLineOption] -> String -> String
+errorPrelude = Utils.errorPrelude "GhcCompat"
 
 -- | The entry-point for the GHC plugin. This is used by passing
 --   [@-fplugin=GhcCompat@](https://downloads.haskell.org/ghc/latest/docs/users_guide/extending_ghc.html#ghc-flag-fplugin-module)
@@ -259,14 +263,6 @@ warnExts optStrs opts dflags =
               $ usedIncompatibleExtensions minVer dflags
         )
         $ Opts.reportIncompatibleExtensions opts
-
-errorPrelude :: [Plugins.CommandLineOption] -> String -> String
-errorPrelude optStrs prefix =
-  "on the commandline: "
-    <> prefix
-    <> ": [GhcCompat plugin] ["
-    <> List.intercalate ", " optStrs
-    <> "]\n    "
 
 -- | A list of extensions incompatible with the provided version that are used
 --   (regardless of `Extension.OnOff`).
